@@ -1,0 +1,355 @@
+CHAPTER 1 — PROJECT FOUNDATION & CONFIGURATION
+1.1 Objective
+The objective is to create the basic foundation of MyRDB.
+It defines common settings used by different database modules.
+It provides a centralized configuration system.
+It helps maintain consistency throughout the RDBMS.
+It prepares the project for binary storage, indexing, WAL, and other components.
+
+--------------------------------------------------------------------------------------------
+1.2 Configuration
+Configuration means defining common settings and constants of the system.
+In MyRDB, configuration is stored in config.py.
+Other modules can import these values when required.
+It avoids defining the same value repeatedly in different files.
+It makes the system easier to modify and maintain.
+
+Example:
+
+PAGE_SIZE = 4096
+
+This tells the storage engine that each page is 4096 bytes.
+-----------------------------------------------------------------------------------------------
+
+1.3 Use of Configuration in MyRDB
+
+Configuration will define things like:
+
+Page size
+Page/file identification
+Storage format version
+Database file location
+Database file extension
+Index file extension
+WAL location
+Backup location
+Checkpoint location
+Database/table/column name limits
+
+Basic flow:
+
+config.py
+   ↓
+Storage Engine
+   ↓
+B+ Tree
+   ↓
+WAL
+   ↓
+Other Engine Components
+
+-------------------------------------------------------------------------------------------------
+1.4 PAGE_SIZE
+PAGE_SIZE = 4096
+PAGE_SIZE defines the size of one database page.
+MyRDB uses 4096 bytes (4 KB) fixed-size pages.
+Database files are divided into these pages.
+Fixed-size pages make disk storage and page addressing easier.
+The storage engine will use this value while reading and writing pages.
+
+Example:
+
+Database File
+│
+├── Page 0 → 4096 bytes
+├── Page 1 → 4096 bytes
+├── Page 2 → 4096 bytes
+└── Page 3 → 4096 bytes
+
+-------------------------------------------------------------------------------------------------------
+
+1.5 PAGE_MAGIC
+PAGE_MAGIC = b"MYDB"
+PAGE_MAGIC is a special sequence of bytes used to identify the MyRDB format.
+It helps the engine check whether a page/file belongs to MyRDB.
+It is stored in the page/file header.
+It helps detect invalid or incompatible files.
+It is not a security feature.
+
+Basic checking:
+
+Read Page
+   ↓
+Check Magic
+   ↓
+MYDB?
+ /   \
+Yes   No
+ ↓     ↓
+Valid  Error
+Easy way to remember:
+
+PAGE_MAGIC = "Is this a MyRDB page?"
+--------------------------------------------------------------------------------------------------------
+
+
+1.6 FORMAT_VERSION
+FORMAT_VERSION = 1
+FORMAT_VERSION identifies the version of MyRDB's binary storage format.
+It helps the engine understand how the stored data is structured.
+The format can change in future versions.
+Version checking prevents the engine from incorrectly reading an incompatible database file.
+
+Example:
+
+MYDB + Version 1 → Current MyRDB format
+MYDB + Version 2 → Future format
+Easy way to remember:
+
+PAGE_MAGIC → Which format?
+
+FORMAT_VERSION → Which version of that format?
+---------------------------------------------------------------------------------------------------------
+
+1.7 Data Directory
+
+The Data Directory is the main location where MyRDB stores its persistent database-related files.
+
+In MyRDB:
+
+DATA_DIR = Path("data")
+
+Structure:
+
+MyRDB/
+└── data/
+
+Use: Provides a central location for database, backup, checkpoint, and WAL files.
+
+Implementation: ✅ Path defined in config.py.
+--------------------------------------------------------------------------------------------------------------
+
+1.8 Database File Extension
+
+The database file extension identifies MyRDB database files.
+
+DATABASE_EXTENSION = ".db"
+
+Example:
+
+students.db
+college.db
+
+Use: Helps MyRDB identify and manage database files.
+
+Implementation: ✅ Extension defined in config.py; actual .db files will be created later.
+----------------------------------------------------------------------------------------------------------------
+
+1.9 Index File Extension
+
+The index file extension is used for persistent index files.
+
+INDEX_EXTENSION = ".idx"
+
+Example:
+
+students.idx
+
+Use: Used later to store persistent index information such as B+ Tree data.
+
+Implementation: ✅ Extension defined; actual index implementation comes later.
+-----------------------------------------------------------------------------------------------------------------------
+1.10 WAL File
+
+WAL = Write-Ahead Log
+
+WAL stores a record of database changes before they are safely written to database pages.
+
+INSERT / UPDATE / DELETE
+          ↓
+         WAL
+          ↓
+    Database Page
+
+Use: Helps with crash recovery.
+
+MyRDB location:
+
+WAL_FILE = DATA_DIR / "engine.wal"
+
+Implementation: ✅ WAL location defined.
+❌ WAL mechanism not implemented yet.
+
+WAL is not a backup. It is a recovery log.
+-----------------------------------------------------------------------------------------------------------------------
+1.11 Backup Directory
+
+The Backup Directory is the location where database backup copies are stored.
+
+BACKUP_DIR = DATA_DIR / "backups"
+
+Structure:
+
+data/
+└── backups/
+
+Use: Allows database data to be restored from a saved copy.
+
+Implementation: ✅ Path defined.
+❌ Backup system not implemented yet.
+--------------------------------------------------------------------------------------------------------------------------
+1.12 Checkpoint Directory
+
+The Checkpoint Directory stores checkpoint-related information used during database recovery.
+
+CHECKPOINT_DIR = DATA_DIR / "checkpoints"
+
+Structure:
+
+data/
+└── checkpoints/
+
+Use: Helps make crash recovery more efficient by providing a known recovery state.
+
+Implementation: ✅ Path defined.
+❌ Checkpoint mechanism not implemented yet.
+
+
+=======================================================================================================================
+=======================================================================================================================
+
+
+CHAPTER 2 — STORAGE
+2.1 Storage Layer Objective
+
+The Storage Layer is responsible for managing how database data is stored and retrieved from disk.
+
+Query
+  ↓
+Engine
+  ↓
+Storage Layer
+  ↓
+Database File
+  ↓
+Disk
+Main responsibilities:
+Create and open database files
+Read and write pages
+Manage free space
+Store records
+Manage page locations
+
+-----------------------------------------------------------------------------------------------------------------
+
+2.2 Page Structure / Page Layout
+
+A page is a fixed-size unit of database storage.
+
+In MyRDB:
+
+PAGE_SIZE = 4096
+
+So each page is initially 4096 bytes.
+
+Basic structure:
+
+┌──────────────────────┐
+│     Page Header      │
+├──────────────────────┤
+│     Record Data      │
+│                      │
+│     Free Space       │
+├──────────────────────┤
+│    Slot Directory    │
+└──────────────────────┘
+       4096 bytes
+Main sections:
+Page Header → Page metadata
+Record Data → Actual database records
+Free Space → Unused space
+Slot Directory → Record locations inside the page
+
+Implementation: 📖 Concept only so far.
+--------------------------------------------------------------------------------------------------------------------
+
+2.3 Page Header
+
+The Page Header is the metadata section at the beginning of a page.
+
+It can contain:
+
+Magic → Identifies a valid MyRDB page
+Version → Identifies storage format version
+Page ID → Identifies the page
+Record Count → Number of records
+Free Space Information → Available space
+
+Example:
+
+┌──────────────────────┐
+│ Magic                │
+│ Version              │
+│ Page ID              │
+│ Record Count         │
+│ Free Space Info      │
+├──────────────────────┤
+│ Records              │
+│ Free Space           │
+├──────────────────────┤
+│ Slot Directory       │
+└──────────────────────┘
+Chapter 1 connection:
+PAGE_MAGIC = b"MYDB"
+FORMAT_VERSION = 1
+
+These values will be used in the page header.
+
+Implementation: 📖 Design understood; actual header code comes later.
+
+------------------------------------------------------------------------------------------------------------------
+
+2.4 Binary Data & struct
+
+Database pages are ultimately stored as binary data (bytes).
+
+Python values must therefore be converted into bytes before being written to a database file.
+
+struct
+
+Python's struct module converts values between Python objects and fixed binary formats.
+
+pack()
+Python values
+     ↓
+struct.pack()
+     ↓
+Bytes
+unpack()
+Bytes
+  ↓
+struct.unpack()
+  ↓
+Python values
+Use in MyRDB
+
+It will allow MyRDB to store and read the Page Header in a fixed and predictable binary format.
+
+Page Header
+     ↓
+struct.pack()
+     ↓
+Bytes
+     ↓
+database.db
+
+When reading:
+
+database.db
+     ↓
+Bytes
+     ↓
+struct.unpack()
+     ↓
+Page Header values
+------------------------------------------------------------------------------------------------------------------
