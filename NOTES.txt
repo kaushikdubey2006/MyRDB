@@ -353,3 +353,80 @@ struct.unpack()
      ↓
 Page Header values
 ------------------------------------------------------------------------------------------------------------------
+2.5 Page Header Binary Layout
+
+Page Header is the metadata stored at the beginning of every database page.
+
+In MyRDB, the Page Header contains:
+
+Field	Size	Purpose
+Magic	4 bytes	Identifies a valid MyRDB page
+Version	2 bytes	Identifies storage format version
+Page ID	4 bytes	Identifies the page
+Record Count	2 bytes	Number of records in the page
+Free Space	4 bytes	Available free space in the page
+
+Total Header Size = 4 + 2 + 4 + 2 + 4 = 16 bytes
+
+Binary Layout
+Byte 0–3     → Magic
+Byte 4–5     → Version
+Byte 6–9     → Page ID
+Byte 10–11   → Record Count
+Byte 12–15   → Free Space
+
+Since MyRDB uses a 4096-byte page:
+
+4096 - 16 = 4080 bytes
+
+So, 4080 bytes remain for record data, free space, and slot directory.
+-------------------------------------------------------------------------------------------------------------------
+
+2.6 Field Sizes & Struct Format
+
+Python struct is used to convert Python values into a fixed binary format for storage.
+
+Struct Format Codes
+Code	Meaning	Size
+4s	4-byte bytes field	4 B
+H	Unsigned short integer	2 B
+I	Unsigned integer	4 B
+
+Therefore, MyRDB's Page Header format is:
+
+4s H I H I
+
+Combined:
+
+"4sHIHI"
+Meaning
+4s → Magic
+H  → Version
+I  → Page ID
+H  → Record Count
+I  → Free Space
+
+Example:
+
+struct.pack("4sHIHI",
+            b"MYDB",
+            1,
+            5,
+            3,
+            2000)
+
+This converts:
+
+Magic        = MYDB
+Version      = 1
+Page ID      = 5
+Record Count = 3
+Free Space   = 2000
+
+into binary bytes.
+
+Important
+struct.pack() → Python values → bytes
+struct.unpack() → bytes → Python values
+struct only performs conversion.
+File operations such as read() and write() actually access the .db file.
