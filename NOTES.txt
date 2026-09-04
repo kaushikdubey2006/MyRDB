@@ -430,3 +430,4 @@ struct.pack() → Python values → bytes
 struct.unpack() → bytes → Python values
 struct only performs conversion.
 File operations such as read() and write() actually access the .db file.
+--------------------------------------------------------------------------------------------------------------------
