@@ -431,3 +431,43 @@ struct.unpack() → bytes → Python values
 struct only performs conversion.
 File operations such as read() and write() actually access the .db file.
 --------------------------------------------------------------------------------------------------------------------
+2.7 — Byte Order / Endianness
+New Concept
+
+Endianness means the order in which multiple bytes of a value are stored in memory or in a binary file.
+
+Jab hum struct se Page ID, Version, Free Space jaise numbers ko bytes mein convert karenge, toh decide karna padega ki bytes kis order mein store honge.
+
+There are two common byte orders:
+
+1. Little-Endian
+
+The least significant byte is stored first.
+
+Example:
+
+Number = 0x12345678
+
+Little-Endian:
+78 56 34 12
+2. Big-Endian
+
+The most significant byte is stored first.
+
+Number = 0x12345678
+
+Big-Endian:
+12 34 56 78
+Why do we need it in MyRDB?
+
+MyRDB stores pages as binary data.
+
+If we don't explicitly define the byte order, 
+the same database file could potentially be interpreted differently on different systems.
+
+So MyRDB should have a fixed binary format.
+
+For our project, we'll use Little-Endian.
+
+Our struct format will therefore becom
+-------------------------------------------------------------------------------------------------------------------------
