@@ -471,3 +471,162 @@ For our project, we'll use Little-Endian.
 
 Our struct format will therefore becom
 -------------------------------------------------------------------------------------------------------------------------
+2.8 Page Header Implementation Design
+A Page Header stores metadata about a database page.
+MyRDB will represent the Page Header using a Python class.
+The class will contain:
+magic
+version
+page_id
+record_count
+free_space
+struct.pack() will convert the header values into binary bytes.
+struct.unpack() will convert binary bytes back into Python values.
+The header size will be 16 bytes.
+This design will be implemented later in storage/page_engine.py.
+Basic Flow
+PageHeader Object
+       ↓
+   struct.pack()
+       ↓
+   16 Bytes
+       ↓
+ Database Page
+ --------------------------------------------------------------------------------------------------------------------
+2.9 Page Creation & Initialization
+Page Initialization means preparing a new empty page for database use.
+MyRDB will create pages of fixed size 4096 bytes.
+Every new page will have a Page Header.
+Initial record_count will be 0.
+The page will initially contain no records.
+page_id will uniquely identify the page.
+
+The remaining space will be available for records and the slot directory.
+Page initialization prepares the page before records are inserted.
+
+Flow
+New Page Required
+       ↓
+Create Page Header
+       ↓
+Set Default Values
+       ↓
+Create 4096-Byte Page
+       ↓
+Place Header
+       ↓
+Page Ready
+
+--------------------------------------------------------------------------------------------------------------------
+
+2.10 Page Read / Write
+
+File I/O means reading data from and writing data to a file.
+MyRDB will use file operations to access .db files.
+write() stores page bytes in the database file.
+read() retrieves page bytes from the database file.
+seek() moves to a specific position in the file.
+Each page has a fixed size of 4096 bytes.
+
+The location of a page can be calculated using:
+Page Offset = Page ID × PAGE_SIZE
+Example:
+Page ID = 2
+Page Size = 4096
+Offset = 2 × 4096 = 8192 bytes
+Flow
+Page ID
+   ↓
+Calculate Offset
+   ↓
+seek()
+   ↓
+read() / write()
+   ↓
+Database File
+Important
+struct → converts Python values ↔ bytes.
+File I/O → transfers bytes ↔ disk file.
+
+-------------------------------------------------------------------------------------------------------------------- 
+
+2.11 Page Validation
+Page Validation checks whether a page is a valid MyRDB page.
+It helps detect corrupted or incorrect pages.
+MyRDB will validate the Page Size.
+It will check the Magic Value.
+It will check the Format Version.
+It can check whether the Page ID matches the requested page.
+If validation fails, MyRDB will generate an appropriate error.
+Main Checks
+Check	Expected
+Page Size	4096 bytes
+Magic	MYDB
+Version	Supported version
+Page ID	Requested page ID
+Flow
+Read Page
+    ↓
+Check Size
+    ↓
+Check Magic
+    ↓
+Check Version
+    ↓
+Check Page ID
+    ↓
+Valid Page ✓
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+2.12 Page Testing
+Testing verifies that the storage system works correctly.
+MyRDB will test page creation.
+It will test Page Header values.
+It will test struct.pack() and struct.unpack().
+It will test page writing to a .db file.
+It will test reading the page back from the file.
+It will test page validation.
+It will also test invalid data and error conditions.
+Main Tests
+Page Creation Test
+Verify that a new page is created.
+Verify page size is 4096 bytes.
+Header Test
+Verify magic, version, page ID, record count, and free space.
+Pack/Unpack Test
+Pack Python values into bytes.
+Unpack the bytes.
+Verify that the original values are recovered.
+Read/Write Test
+Write a page to the .db file.
+Read the same page.
+Compare the results.
+Validation Test
+Test valid pages.
+Test invalid magic, version, size, etc.
+Error Test
+Intentionally provide invalid data.
+Verify that MyRDB generates the expected error.
+Final Testing Flow
+Create Page
+     ↓
+Create Header
+     ↓
+Pack Header
+     ↓
+Write to .db
+     ↓
+Read from .db
+     ↓
+Unpack Header
+     ↓
+Validate Page
+     ↓
+Compare Results
+     ↓
+PASS ✓
+============================================================================================================================
+============================================================================================================================
+
