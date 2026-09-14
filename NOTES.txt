@@ -633,3 +633,378 @@ PASS ✓
 COMPLETION OF CHAPTER 1 AND 2
 
 CODING OF CHAPTER 1 AND 2 IS DONE ...
+
+============================================================================================================================
+============================================================================================================================
+
+CHAPTER-3  Record & Slot Managment
+
+3.1 Record Storage Objective
+What is a Record?
+
+A record is a complete set of related data representing one row of a table.
+
+Example:
+
+Students
+--------------------------------
+ID      Name       Age
+101     Aman       20
+
+Here:
+
+101, Aman, 20
+
+is one record.
+
+Why is Record Storage Needed?
+
+In Chapter 2, we learned how MyRDB stores and manages pages. However, a page itself is not a database row.
+
+Chapter 3 introduces the mechanism for storing actual records inside pages.
+
+Record vs Page
+Record	Page
+Represents a logical row	Represents a physical storage unit
+Contains actual field values	Contains records and metadata
+Example: 101, Aman, 20	Example: 4096-byte page
+Logical concept	Physical storage concept
+Record Identification
+
+A record will eventually be identified using:
+
+Page ID + Slot ID
+
+The Slot Directory will map the Slot ID to the physical location of the record.
+
+MyRDB Flow
+SQL/Table Fields
+      ↓
+Logical Record
+      ↓
+Record Storage
+      ↓
+Page
+Small Example
+record = {
+    "id": 101,
+    "name": "Aman",
+    "age": 20
+}
+
+print(record)
+
+This represents a logical record. It is not yet physically stored in a page.
+
+-------------------------------------------------------------------------------------------------------------------- 
+
+3.2 Record Structure
+What is Record Structure?
+
+Record Structure defines how the fields of a record are organized and represented.
+
+Example:
+
+Student Record
+├── ID
+├── Name
+└── Age
+
+For:
+
+101, Aman, 20
+
+the record contains:
+
+ID → 101
+Name → Aman
+Age → 20
+Why is Record Structure Needed?
+
+It helps MyRDB know:
+
+Which fields belong to the record.
+What value each field contains.
+What data type each field has.
+How the record should be serialized.
+How the record should be reconstructed after reading.
+Record Structure vs Record Storage
+
+These are different concepts.
+
+Record Structure:
+
+ID = 101
+Name = Aman
+Age = 20
+
+Record Storage:
+
+Page ID = 0
+Slot ID = 1
+Offset = 120
+Length = 15
+
+Therefore:
+
+Record Structure describes what the record contains, while Record Storage describes how and where it is stored.
+
+MyRDB Flow
+Table Definition
+      ↓
+Record Structure
+      ↓
+Record Values
+      ↓
+Serialization
+      ↓
+Physical Storage
+Small Example
+record = {
+    "id": 101,
+    "name": "Aman",
+    "age": 20
+}
+
+print(record["name"])
+
+Output:
+
+Aman
+--------------------------------------------------------------------------------------------------------------------  
+
+
+3.3 Record Serialization
+What is Serialization?
+
+Serialization is the process of converting a logical record into a byte representation that can be stored on disk.
+
+Logical Record
+      ↓
+Serialization
+      ↓
+Bytes
+      ↓
+Page / Disk
+Why is Serialization Needed?
+
+A database file stores binary data (bytes).
+
+A Python dictionary such as:
+
+{
+    "id": 101,
+    "name": "Aman",
+    "age": 20
+}
+
+cannot simply be written to the binary page in its Python-object form.
+
+Therefore, MyRDB converts the record into bytes.
+
+Simple Example
+record = "101,Aman,20"
+
+data = record.encode("utf-8")
+
+print(data)
+
+Output:
+
+b'101,Aman,20'
+
+The string has been converted into bytes.
+
+Deserialization
+
+The reverse process is called deserialization.
+
+Bytes
+  ↓
+Deserialization
+  ↓
+Logical Record
+
+Example:
+
+data = b'101,Aman,20'
+
+record = data.decode("utf-8")
+
+print(record)
+
+Output:
+
+101,Aman,20
+Important: Chapter 2 Connection
+
+We already used serialization in Chapter 2 through:
+
+struct.pack()
+
+and deserialization through:
+
+struct.unpack()
+
+But Chapter 2 dealt mainly with Page Header serialization.
+
+Now Chapter 3.3 deals specifically with:
+
+Record → Bytes
+Difference
+Chapter 2	Chapter 3
+Page Header → Bytes	Record → Bytes
+Metadata	Actual row/data
+PageHeader.pack()	Future Record.serialize()
+Fixed header fields	Record fields
+MyRDB Flow
+SQL INSERT
+     ↓
+Parser
+     ↓
+Executor
+     ↓
+Logical Record
+     ↓
+Serialization
+     ↓
+Record Bytes
+     ↓
+Page
+     ↓
+.db File
+Important Note
+
+The "101,Aman,20" example is only a simple learning example.
+
+A real database needs a structured binary format that can correctly handle different data types and variable-length values.
+
+-------------------------------------------------------------------------------------------------------------------- 
+
+3.4 Slot Directory
+What is a Slot Directory?
+
+A Slot Directory is a structure inside a page that stores the physical location information of records.
+
+It mainly maintains:
+
+Slot ID → Offset + Length
+
+Example:
+
+Slot 0 → Offset 100, Length 20
+Slot 1 → Offset 120, Length 25
+Slot 2 → Offset 145, Length 18
+Why is Slot Directory Needed?
+
+Records may have different sizes.
+
+For example:
+
+101, Aman, 20
+102, Rahul, 21
+103, Christopher, 22
+
+The serialized records may occupy different numbers of bytes.
+
+Therefore, MyRDB needs a structure that tells it exactly where every record is located.
+
+Page Layout
+┌──────────────────────────────┐
+│         PAGE HEADER          │
+├──────────────────────────────┤
+│                              │
+│       RECORD STORAGE         │
+│                              │
+│        Record 1              │
+│        Record 2              │
+│        Record 3              │
+│                              │
+│        FREE SPACE            │
+│                              │
+├──────────────────────────────┤
+│       SLOT DIRECTORY         │
+│                              │
+│ Slot 0 → Offset + Length     │
+│ Slot 1 → Offset + Length     │
+│ Slot 2 → Offset + Length     │
+└──────────────────────────────┘
+Slot Entry
+
+A slot entry contains information such as:
+
+Slot ID
+Offset
+Length
+
+Example:
+
+Slot ID = 1
+Offset  = 120
+Length  = 25
+
+This means:
+
+The record identified by Slot 1 starts at byte 120 and occupies 25 bytes.
+
+Offset
+
+Offset = starting byte position of the record inside the page.
+
+Example:
+
+Offset = 100
+
+means the record starts at byte 100.
+
+Length
+
+Length = number of bytes occupied by the record.
+
+Example:
+
+Offset = 100
+Length = 20
+
+The record occupies:
+
+Byte 100 → Byte 119
+
+So:
+
+Offset tells WHERE to start, and Length tells HOW MANY bytes to read.
+
+Small Example
+slot_directory = [
+    {"offset": 100, "length": 20},
+    {"offset": 120, "length": 25},
+    {"offset": 145, "length": 18}
+]
+
+print(slot_directory[1])
+
+Output:
+
+{'offset': 120, 'length': 25}
+
+Here:
+
+Slot ID = 1
+Offset  = 120
+Length  = 25
+Complete Record Location Flow
+Page ID
+   ↓
+Slot ID
+   ↓
+Offset + Length
+   ↓
+Record Bytes
+   ↓
+Deserialization
+   ↓
+Logical Record
+Key Relationship
+Page ID → Slot ID → Offset + Length → Record
+
+This relationship will become very important when we implement INSERT, SELECT, UPDATE, and DELETE.
