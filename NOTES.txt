@@ -1008,3 +1008,41 @@ Key Relationship
 Page ID → Slot ID → Offset + Length → Record
 
 This relationship will become very important when we implement INSERT, SELECT, UPDATE, and DELETE.
+
+-----------------------------------------------------------------------------------------------------------------------
+
+3.5 Slot ID — Summary
+What we learned
+Slot ID is an internal identifier used to identify a record within a page.
+A Slot ID points to a slot entry in the Slot Directory.
+A slot entry contains the record's:
+Offset → where the record starts
+Length → how many bytes the record occupies
+
+Example:
+Slot 1 → Offset 120, Length 25
+
+This means Slot 1's record starts at byte 120 and occupies 25 bytes.
+
+Slot ID is different from Primary Key.
+Primary Key → identifies the logical database record.
+Slot ID → identifies its physical storage entry within a page.
+Slot IDs are page-local.
+Page 0 + Slot 1 and Page 1 + Slot 1 can refer to different records.
+
+When a record is deleted, its slot can become deleted/available instead of shifting all other slots.
+
+Example:
+Before: Slot 0 → A, Slot 1 → B, Slot 2 → C
+After deleting B: Slot 0 → A, Slot 1 → Deleted, Slot 2 → C
+
+A deleted slot can potentially be reused by a future INSERT.
+Most important flow
+
+Page ID → Slot ID → Slot Entry → Offset + Length → Record Bytes
+
+One-line definition
+
+Slot ID identifies a record's slot within a page, while the slot entry provides the offset and length needed to locate that record's bytes.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
