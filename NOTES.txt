@@ -1046,3 +1046,30 @@ One-line definition
 Slot ID identifies a record's slot within a page, while the slot entry provides the offset and length needed to locate that record's bytes.
 
 --------------------------------------------------------------------------------------------------------------------------------------------------
+
+3.6 Record Offset & Length — Short Notes
+Record Offset
+Offset = starting byte position of a record inside a page.
+It tells where the record starts.
+Example: Offset = 100 → record starts at byte 100.
+Record Length
+Length = total number of bytes occupied by the record.
+It tells how many bytes to read.
+Example: Length = 20 → read 20 bytes.
+Example
+
+Slot 1 → Offset = 100, Length = 20
+
+Means:
+
+Start = 100
+Read = 20 bytes
+Range = 100–119
+Important Difference
+Page Offset → where the page starts in the .db file.
+Record Offset → where the record starts inside that page.
+Main Flow
+
+Page ID → Slot ID → Offset + Length → Record Bytes
+
+Offset tells WHERE to start; Length tells HOW MANY bytes to read.
