@@ -1073,3 +1073,34 @@ Main Flow
 Page ID → Slot ID → Offset + Length → Record Bytes
 
 Offset tells WHERE to start; Length tells HOW MANY bytes to read.
+
+---------------------------------------------------------------------------------------------------------------------------
+3.7 Free Space Management — Short Notes
+Free Space = unused space available inside a page for storing records.
+MyRDB must check free space before inserting or updating a record.
+Required space includes:
+Record size
+Slot entry size
+Example
+
+Free Space = 500 bytes
+Record = 100 bytes
+Slot Entry = 8 bytes
+
+Required = 100 + 8 = 108 bytes
+
+Since 500 ≥ 108, the record can fit.
+
+If space is insufficient
+
+Page 0 → Not enough space → Find/Create another page
+
+Free Space Changes
+INSERT → free space decreases
+DELETE → free space can increase
+UPDATE → free space may increase or decrease depending on the new record size
+Main Flow
+
+INSERT → Check Free Space → Record fits? → Store Record + Slot Entry
+
+Free Space Management determines whether a page has enough space to store or modify a record.
