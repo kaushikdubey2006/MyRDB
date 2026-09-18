@@ -1206,3 +1206,26 @@ The page's metadata must be updated, such as:
 Record count
 Free space
 Slot information
+5. Small Example
+
+Conceptually:
+
+record = b"101,Aman,20"
+
+offset = 100
+length = len(record)
+
+print(offset)
+print(length)
+
+Output:
+
+100
+11
+
+So the storage information becomes:
+
+Slot 0 → Offset 100, Length 11
+
+This is only a small learning example; our actual binary record format will be designed separately.
+------------------------------------------------------------------------------------------------------------------
