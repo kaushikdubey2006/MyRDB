@@ -1361,3 +1361,185 @@ Deserialization
 Logical Record
 
 Record Read uses the Slot ID, Offset, and Length to locate the exact record bytes and reconstruct the original record.
+----------------------------------------------------------------------------------------------------------------------------------
+# 3.10 Record Update
+
+**Record Update** means modifying an existing record that is already stored in a page.
+
+For example:
+
+`UPDATE Students SET Age = 21 WHERE ID = 101;`
+
+The existing record:
+
+`101, Aman, 20`
+
+becomes:
+
+`101, Aman, 21`
+
+---
+
+## 1. Basic Update Flow
+
+```text id="z8x4xj"
+UPDATE SQL
+    ↓
+Find Record
+    ↓
+Page ID + Slot ID
+    ↓
+Get Offset + Length
+    ↓
+Read Existing Record
+    ↓
+Modify Record
+    ↓
+Serialize Again
+    ↓
+Check Available Space
+    ↓
+Store Updated Record
+    ↓
+Update Slot Entry
+```
+
+This is another important **future flow** for MyRDB.
+
+---
+
+## 2. Why is Update More Complicated than Read?
+
+When a record is updated, its size may change.
+
+Example:
+
+`101, Aman, 20`
+
+might become:
+
+`101, Aman Kumar, 20`
+
+The new record requires more bytes.
+
+So MyRDB cannot blindly overwrite the old record.
+
+It must check:
+
+> **Can the updated record fit in the existing space?**
+
+---
+
+## 3. Two Common Cases
+
+### Case 1 — New record fits in the existing space
+
+Example:
+
+`Old Length = 20 bytes`
+
+`New Length = 18 bytes`
+
+The updated record can potentially use the existing location.
+
+```text
+Old Record
+   ↓
+Update
+   ↓
+New Record
+   ↓
+Same location
+```
+
+---
+
+### Case 2 — New record is larger
+
+Example:
+
+`Old Length = 20 bytes`
+
+`New Length = 35 bytes`
+
+The old location may not have enough space.
+
+Conceptually:
+
+```text
+Old Record
+   ↓
+New Record is larger
+   ↓
+Find suitable free space
+   ↓
+Store new record there
+   ↓
+Update Slot Entry
+```
+
+The Slot ID can remain the logical storage reference while its offset/length is updated.
+
+---
+
+## 4. Small Example
+
+Suppose:
+
+`Slot 0 → Offset 100, Length 15`
+
+Old record:
+
+`101,Aman,20`
+
+After update:
+
+`101,Aman,21`
+
+If the new serialized record still fits the available space:
+
+```text
+Slot 0 → Offset 100, New Length
+```
+
+The Slot Directory is updated if necessary.
+
+---
+
+## 5. Why Slot Directory Matters
+
+Without the Slot Directory, MyRDB would have difficulty knowing exactly where the existing record is.
+
+The process is:
+
+```text
+Slot ID
+   ↓
+Offset + Length
+   ↓
+Existing Record
+   ↓
+Update
+   ↓
+New Record
+   ↓
+Updated Offset + Length
+```
+
+---
+
+## 6. Important Point
+
+An update does **not always mean modifying the same physical bytes in place**.
+
+Depending on the final storage design:
+
+* If the new record fits → it may be updated in place.
+* If it becomes larger → it may need to move to another free location.
+* The Slot Directory can then be updated with the new offset/length.
+
+We will decide the exact implementation when we build the storage engine.
+
+### Key Definition
+
+> **Record Update modifies an existing record and manages the new serialized size, available space, and Slot Directory information.**
