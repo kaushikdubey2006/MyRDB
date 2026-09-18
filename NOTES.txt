@@ -1250,3 +1250,114 @@ Otherwise → create a new page
 
 This connects directly with 3.7 Free Space Management.
 ------------------------------------------------------------------------------------------------------------------
+3.9 Record Read
+
+After inserting records, MyRDB needs a way to retrieve a specific record from a page.
+
+This is the basic operation behind SELECT.
+
+1. What is Record Read?
+
+Record Read is the process of locating a stored record and converting its bytes back into a usable logical record.
+
+Example:
+
+SELECT * FROM Students;
+
+MyRDB needs to:
+
+Page
+ ↓
+Find Slot
+ ↓
+Get Offset + Length
+ ↓
+Read Record Bytes
+ ↓
+Deserialize
+ ↓
+Return Record
+2. How does MyRDB locate the record?
+
+Suppose the Slot Directory contains:
+
+Slot 0 → Offset 100, Length 15
+
+MyRDB receives:
+
+Slot ID = 0
+
+It looks up Slot 0:
+
+Slot 0
+  ↓
+Offset = 100
+Length = 15
+  ↓
+Read 15 bytes starting at byte 100
+
+Then those bytes are deserialized.
+
+3. Small Example
+
+Suppose:
+
+page_data = b"...............101,Aman,20"
+
+offset = 15
+length = 11
+
+record_bytes = page_data[offset:offset + length]
+
+print(record_bytes)
+
+The important operation is:
+
+page_data[offset : offset + length]
+
+It means:
+
+Start at the offset and read exactly the record's length.
+
+4. Deserialization
+
+After reading the bytes:
+
+Record Bytes
+     ↓
+Deserialization
+     ↓
+Logical Record
+
+For example:
+
+b"101,Aman,20" → 101, Aman, 20
+
+Later, our actual MyRDB serializer will use a proper binary format rather than this simple string example.
+
+5. Important Connection
+
+Record Read is essentially the reverse of Record Insert.
+
+INSERT:
+
+Record → Serialize → Bytes → Page
+
+READ:
+
+Page → Bytes → Deserialize → Record
+
+Main Flow
+Page ID + Slot ID
+        ↓
+Slot Directory
+        ↓
+Offset + Length
+        ↓
+Record Bytes
+        ↓
+Deserialization
+        ↓
+Logical Record
+
+Record Read uses the Slot ID, Offset, and Length to locate the exact record bytes and reconstruct the original record.
