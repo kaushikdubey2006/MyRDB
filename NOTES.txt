@@ -1120,3 +1120,24 @@ For example, the user executes:
 INSERT INTO Students VALUES (101, 'Aman', 20);
 
 MyRDB eventually needs to store this record physically.
+2. Basic Insert Flow
+
+The overall process is:
+
+INSERT SQL
+   ↓
+Parser
+   ↓
+Logical Record
+   ↓
+Serialize Record
+   ↓
+Find Page with Free Space
+   ↓
+Store Record Bytes
+   ↓
+Create Slot Entry
+   ↓
+Update Page Metadata
+
+This is an important future flow for our project.
