@@ -1104,3 +1104,19 @@ Main Flow
 INSERT → Check Free Space → Record fits? → Store Record + Slot Entry
 
 Free Space Management determines whether a page has enough space to store or modify a record.
+
+--------------------------------------------------------------------------------------------------------------------
+
+3.8 Record Insert
+
+Now we move from managing space to actually inserting a record into a page.
+
+1. What is Record Insert?
+
+Record Insert is the process of storing a new record inside a MyRDB page.
+
+For example, the user executes:
+
+INSERT INTO Students VALUES (101, 'Aman', 20);
+
+MyRDB eventually needs to store this record physically.
