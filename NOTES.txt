@@ -1165,3 +1165,44 @@ Offset 100
 Length 15
    ↓
 Record Bytes
+4. Insert Steps
+Step 1 — Create Record
+ID = 101
+Name = Aman
+Age = 20
+Step 2 — Serialize
+Record → Bytes
+Step 3 — Check Free Space
+
+For example:
+
+Free Space = 500 bytes
+
+If:
+
+Record = 15 bytes
+Slot Entry = 8 bytes
+
+Then:
+
+Required = 23 bytes
+
+The record fits.
+
+Step 4 — Store Record
+
+Record bytes are written into the available area of the page.
+
+Step 5 — Create Slot
+
+The Slot Directory gets something like:
+
+Slot 0 → Offset 100, Length 15
+
+Step 6 — Update Metadata
+
+The page's metadata must be updated, such as:
+
+Record count
+Free space
+Slot information
