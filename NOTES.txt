@@ -1228,4 +1228,25 @@ So the storage information becomes:
 Slot 0 → Offset 100, Length 11
 
 This is only a small learning example; our actual binary record format will be designed separately.
+6. What if the page is full?
+
+Suppose:
+
+Free Space = 10 bytes
+
+but:
+
+Required Space = 23 bytes
+
+Then:
+
+Record does not fit
+        ↓
+Check another page
+        ↓
+If suitable page exists → use it
+        ↓
+Otherwise → create a new page
+
+This connects directly with 3.7 Free Space Management.
 ------------------------------------------------------------------------------------------------------------------
