@@ -1141,3 +1141,27 @@ Create Slot Entry
 Update Page Metadata
 
 This is an important future flow for our project.
+3. What happens inside the page?
+
+Suppose we have:
+
+Record = 101, Aman, 20
+
+After serialization:
+
+Record Bytes
+
+Suppose MyRDB stores these bytes starting at offset 100.
+
+The Slot Directory gets:
+
+Slot 0 → Offset 100, Length 15
+
+So the page now knows:
+
+Slot 0
+   ↓
+Offset 100
+Length 15
+   ↓
+Record Bytes
