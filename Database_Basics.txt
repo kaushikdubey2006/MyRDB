@@ -1650,3 +1650,138 @@ Disjoint ≠ total participation.
 1:N → FK generally on N-side.
 M:N → separate relation.
 Multivalued attribute → separate relation.
+
+
+
+
+
+12. DATABASE RECOVERY
+12.1 Purpose
+
+Recovery restores the database to a consistent state after failures.
+
+12.2 Failure Types
+Transaction Failure
+
+Individual transaction fails.
+
+System Crash
+
+Volatile memory contents may be lost.
+
+Media Failure
+
+Storage itself is damaged.
+
+May require:
+
+Backup + Recovery
+12.3 Log-Based Recovery
+
+Log records changes.
+
+Example:
+
+<T1, START>
+<T1, A, old, new>
+<T1, COMMIT>
+12.4 Write-Ahead Logging (WAL) ⭐⭐⭐⭐⭐
+
+Rule:
+
+Log record must reach stable storage before the corresponding modified data page is written.
+
+Transaction
+ ↓
+Log
+ ↓
+Stable Storage
+ ↓
+Data Page
+
+Before commit is acknowledged, necessary commit log information must be safely stored according to the recovery protocol.
+
+12.5 UNDO
+
+Restore old value.
+
+Old = 100
+New = 50
+
+UNDO → 100
+12.6 REDO
+
+Reapply new value.
+
+Old = 100
+New = 50
+
+REDO → 50
+12.7 Deferred Update ⭐⭐⭐⭐⭐
+
+Database modification is delayed until commit.
+
+Generally:
+
+$$ \boxed{Deferred\rightarrow REDO} $$
+
+No database changes from an uncommitted transaction need to be undone because they haven't been installed in the database under the basic deferred-update model.
+
+12.8 Immediate Update ⭐⭐⭐⭐⭐
+
+Database may be modified before commit.
+
+Therefore:
+
+$$ \boxed{Immediate\rightarrow UNDO+REDO} $$
+12.9 Checkpoint
+
+Reduces recovery work.
+
+Earlier log
+   ↓
+CHECKPOINT
+   ↓
+Later log
+   ↓
+Crash
+
+Checkpoint does not mean failures cannot happen.
+
+12.10 Cascading Rollback
+
+Example:
+
+T1 writes A
+T2 reads A
+T1 aborts
+
+T2 may also need rollback.
+
+12.11 Cascadeless
+
+A transaction reads only values written by committed transactions.
+
+12.12 Shadow Paging
+
+Uses:
+
+Shadow page table
+Current page table
+
+Alternative recovery technique to traditional log-based recovery.
+
+🔥 RECOVERY TRAPS
+WAL → log first, corresponding data page later.
+WAL doesn't mean data first.
+Deferred → generally REDO.
+Immediate → UNDO + REDO.
+UNDO → old value.
+REDO → new value.
+Checkpoint → reduces recovery work.
+Checkpoint doesn't eliminate recovery.
+Dirty read can cause cascading rollback.
+Cascadeless prevents reading uncommitted writes.
+Strict is stronger than cascadeless.
+Serializability ≠ recovery.
+Shadow paging uses shadow/current page tables.
