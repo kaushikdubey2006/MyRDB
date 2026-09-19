@@ -1301,3 +1301,133 @@ Natural join removes duplicate common attribute.
 Division → “for all”.
 Rename → useful in self-join.
 Selection pushdown can reduce intermediate results.
+
+
+
+
+
+
+
+
+
+
+
+10. QUERY PROCESSING & OPTIMIZATION
+10.1 Query Processing
+
+General flow:
+
+SQL
+ ↓
+Parsing / Translation
+ ↓
+Query Representation
+ ↓
+Optimization
+ ↓
+Execution
+10.2 Query Optimizer
+
+Goal:
+
+Find a semantically equivalent execution plan with lower cost.
+
+Cost can include:
+
+Disk I/O
+CPU
+Memory
+Intermediate result size
+Network cost in distributed systems
+10.3 Query Tree
+
+Example:
+
+       π Name
+          |
+      σ Marks>80
+          |
+       STUDENT
+
+Execution generally proceeds from lower nodes toward the root.
+
+10.4 Selection Pushdown
+
+Instead of:
+
+Join
+ ↓
+Selection
+
+often transform to:
+
+       Join
+      /    \
+Selection   S
+   |
+   R
+
+if condition only applies to R.
+
+This reduces tuples entering the join.
+
+10.5 Projection Pushdown
+
+Remove unnecessary columns early when safe.
+
+Reduces tuple width and intermediate data size.
+
+10.6 Join Algorithms
+Nested-Loop Join
+
+For each tuple/block of outer relation, examine inner relation.
+
+General but can be expensive.
+
+Indexed Nested-Loop
+
+Uses index on inner relation's join attribute.
+
+Sort-Merge Join
+Sort R
+Sort S
+Merge
+
+Good when data is sorted or sorting is beneficial.
+
+Hash Join
+Build hash structure
+        ↓
+Probe
+
+Especially good for equality joins.
+
+10.7 Query Cost
+
+Disk/page I/O is a major cost.
+
+Optimizer often attempts to minimize:
+
+$$ \boxed{\text{Page I/Os}} $$
+10.8 Materialization vs Pipelining
+Materialization
+
+Intermediate result fully computed/stored.
+
+Pipelining
+
+Tuples flow directly between operators.
+
+Operator A → Operator B → Operator C
+🔥 QUERY PROCESSING TRAPS
+Optimization changes execution strategy, not result.
+Disk I/O is a major cost.
+Selection pushdown → fewer tuples.
+Projection pushdown → fewer attributes.
+Hash join → equality joins.
+Sort-merge → sorting/merging.
+Indexed nested-loop → can exploit inner index.
+Query trees represent relational operations.
+Equivalent trees can have different costs.
+Pipelining avoids fully materializing every intermediate result.
+Don't use a nested-loop cost formula without checking assumptions.
