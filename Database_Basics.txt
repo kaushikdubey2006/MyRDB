@@ -1174,3 +1174,130 @@ Underflow → redistribution/merge.
 Hash collision → different keys same bucket.
 Hash → equality.
 B+ tree → range/order.
+
+
+
+
+
+
+
+
+
+
+
+
+9. RELATIONAL ALGEBRA
+
+Relational Algebra is a procedural query language.
+
+9.1 Basic Operators
+Operator	Meaning
+σ	Selection
+π	Projection
+∪	Union
+−	Difference
+×	Cartesian product
+ρ	Rename
+
+Derived/common:
+
+⋈ → Join
+∩ → Intersection
+÷ → Division
+9.2 Selection
+$$ \sigma_{condition}(R) $$
+
+Selects rows/tuples.
+
+Shortcut
+σ → Rows
+9.3 Projection
+$$ \pi_{attributes}(R) $$
+
+Selects columns/attributes.
+
+In classical relational algebra, projection removes duplicates because relations are sets.
+
+Shortcut
+π → Columns
+9.4 Union
+$$ R\cup S $$
+
+Requires union compatibility.
+
+9.5 Difference
+$$ R-S $$
+
+Means tuples in R but not S.
+
+Generally:
+
+$$ R-S\neq S-R $$
+9.6 Cartesian Product
+$$ R\times S $$
+
+If:
+
+$$ |R|=m,\ |S|=n $$
+
+then:
+
+$$ \boxed{|R\times S|=mn} $$
+9.7 Rename
+$$ \rho $$
+
+Used to rename relations/attributes.
+
+Especially useful for self-joins.
+
+9.8 Join
+
+Combines related tuples.
+
+Theta Join
+
+Join using explicit condition.
+
+Natural Join
+
+Uses common attributes and eliminates duplicate common attributes in the result.
+
+9.9 Division ⭐⭐⭐⭐⭐
+
+Used for "for all" queries.
+
+Example:
+
+Find students who completed all required courses.
+
+Think:
+
+Division → FOR ALL
+9.10 Selection Pushdown
+
+Filtering before a join can reduce intermediate results.
+
+Selection
+   ↓
+Join
+
+instead of:
+
+Join
+ ↓
+Selection
+
+when the transformation is valid.
+
+🔥 RELATIONAL ALGEBRA TRAPS
+σ → rows.
+π → columns.
+Classical projection removes duplicates.
+R−S ≠ S−R generally.
+Union needs compatibility.
+Cartesian product → multiply cardinalities.
+Natural join → common attributes.
+Natural join removes duplicate common attribute.
+Division → “for all”.
+Rename → useful in self-join.
+Selection pushdown can reduce intermediate results.
