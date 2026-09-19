@@ -1785,3 +1785,343 @@ Cascadeless prevents reading uncommitted writes.
 Strict is stronger than cascadeless.
 Serializability ≠ recovery.
 Shadow paging uses shadow/current page tables.
+
+
+
+
+
+
+
+
+
+
+13. STORAGE & FILE ORGANIZATION
+13.1 Storage Hierarchy
+Registers
+ ↓
+Cache
+ ↓
+RAM
+ ↓
+SSD/Disk
+
+Database data is commonly transferred between storage and memory in pages/blocks.
+
+13.2 Page / Block
+
+Basic unit of disk-memory transfer.
+
+Example:
+
+Page
+ ├── Header
+ ├── Records
+ └── Free Space
+13.3 Record
+
+One tuple/row.
+
+13.4 Fixed-Length Record
+
+All records same size.
+
+Formula:
+
+$$ \boxed{ Records/Page= \left\lfloor \frac{Usable\ Page\ Size}{Record\ Size} \right\rfloor } $$
+13.5 Variable-Length Record
+
+Records can have different lengths.
+
+Often requires:
+
+Offsets
+Lengths
+Slot directory
+13.6 Slotted Page ⭐⭐⭐⭐⭐
+
+Common structure:
+
+┌──────────────────┐
+│ Page Header      │
+├──────────────────┤
+│ Record 1         │
+│ Record 2         │
+│ Record 3         │
+│                  │
+│ Free Space       │
+├──────────────────┤
+│ Slot Directory   │
+└──────────────────┘
+
+Useful for variable-length records.
+
+13.7 Spanned vs Unspanned
+Spanned
+
+Record can cross page boundaries.
+
+Unspanned
+
+Record must stay within one page.
+
+Spanned   → Can cross
+Unspanned → Cannot cross
+13.8 Heap Organization
+
+Records unordered.
+
+Good for:
+Insertion
+Bad for:
+
+Searching without an index.
+
+13.9 Sequential / Ordered
+
+Records stored according to ordering key.
+
+Good for:
+Sequential processing
+Ordered access
+Range queries
+13.10 Hash Organization
+$$ h(K)=K\bmod m $$
+
+Good for equality.
+
+Poor for range.
+
+13.11 Buffer Manager
+
+Manages pages between storage and RAM.
+
+Responsibilities:
+
+Fetch pages
+Manage buffer frames
+Replace pages
+Write modified pages back
+13.12 Buffer Hit
+
+Page already in buffer.
+
+No disk read required.
+
+Buffer Miss
+
+Page not present.
+
+Requires fetching from storage.
+
+13.13 Dirty Page
+
+Page modified in memory compared with its stored version.
+
+13.14 Blocking Factor ⭐⭐⭐⭐⭐
+
+If:
+
+Block size = B
+Record size = R
+
+then:
+
+$$ \boxed{ bfr=\left\lfloor\frac{B}{R}\right\rfloor } $$
+13.15 Number of Blocks
+
+If:
+
+Number of records = r
+Blocking factor = bfr
+
+then:
+
+$$ \boxed{ b=\left\lceil\frac{r}{bfr}\right\rceil } $$
+🔥 Critical shortcut
+Records per block → FLOOR
+Number of blocks → CEILING
+Example
+
+Block = 1000 bytes.
+
+Record = 120 bytes.
+
+$$ bfr=\lfloor1000/120\rfloor=8 $$
+
+For 950 records:
+
+$$ blocks=\lceil950/8\rceil=119 $$
+🔥🔥 MASTER TRAP SHEET — LAST-MINUTE REVISION
+
+If you're short on time, memorize this section first.
+
+Fundamentals
+Degree → Columns
+Cardinality → Rows
+
+Schema → Structure
+Instance → Current data
+
+Physical DI → Internal level
+Logical DI → Conceptual level
+Keys
+Candidate → Minimal superkey
+Primary → Selected candidate key
+Entity integrity → PK not NULL
+Referential integrity → Valid FK reference
+FD
+X+ → Attributes determined by X
+
+Candidate key:
+Closure = all attributes
++
+Minimality
+SQL
+WHERE → Rows
+HAVING → Groups
+
+COUNT(*) → Rows
+COUNT(col) → Non-NULL
+COUNT(DISTINCT col) → Unique non-NULL
+
+ANY → At least one
+ALL → Every
+EXISTS → At least one row
+
+=NULL ❌
+IS NULL ✅
+
+UNION → Remove duplicates
+UNION ALL → Keep duplicates
+
+NOT IN + NULL → Dangerous
+Normalization
+1NF → Atomic
+2NF → No partial dependency
+3NF → Superkey OR prime RHS
+BCNF → Determinant must be superkey
+
+BCNF ⊂ 3NF in strength
+Transactions
+RR → No conflict
+RW → Conflict
+WR → Conflict
+WW → Conflict
+
+Cycle → Not conflict serializable
+Acyclic → Conflict serializable
+
+Strict → Cascadeless → Recoverable
+Concurrency
+S-S → Compatible
+S-X → Not
+X-X → Not
+
+2PL → Growing + Shrinking
+
+Wait-Die:
+Older waits
+Younger dies
+
+Wound-Wait:
+Older wounds
+Younger waits
+Indexing
+B+ Tree → Range
+Hash → Equality
+
+Sparse → Ordered file generally required
+
+Order m:
+Max children = m
+Max keys = m−1
+
+Overflow → Split
+Underflow → Redistribute/Merge
+Relational Algebra
+σ → Rows
+π → Columns
+
+R−S ≠ S−R
+
+R×S → |R|×|S|
+
+Division → FOR ALL
+Query Processing
+Selection Pushdown → Fewer tuples
+Projection Pushdown → Fewer attributes
+
+Hash Join → Equality
+Sort-Merge → Sorted/Merge
+Nested Loop → General
+
+Optimizer:
+Same result + lower cost
+ER
+Cardinality → How many?
+Participation → Mandatory/Optional
+
+Weak Entity → No complete key
+
+Specialization → Top-down
+Generalization → Bottom-up
+
+1:N → FK on N-side
+M:N → Separate relation
+Recovery
+WAL → Log before data page
+
+UNDO → Old value
+REDO → New value
+
+Deferred → REDO
+Immediate → UNDO + REDO
+
+Checkpoint → Less recovery work
+Storage
+Spanned → Can cross page
+Unspanned → Cannot cross
+
+Heap → Insert
+Sequential → Range/order
+Hash → Equality
+
+Buffer hit → Already in RAM
+
+bfr = floor(Block/Record)
+
+Blocks = ceil(Records/bfr)
+🎯 MOST IMPORTANT NUMERICAL FORMULAS
+Attribute Closure
+
+No fixed formula:
+
+Start X
+↓
+Apply FDs repeatedly
+↓
+X+
+
+If:
+
+$$ X^+=R $$
+
+then X is a superkey.
+
+Check minimality for candidate key.
+
+Cartesian Product
+$$ \boxed{|R\times S|=|R||S|} $$
+B+ Tree
+
+For order \(m\):
+
+$$ \boxed{\text{Max children}=m} $$ $$ \boxed{\text{Max keys}=m-1} $$
+Blocking Factor
+$$ \boxed{ bfr=\left\lfloor\frac{B}{R}\right\rfloor } $$
+Number of Blocks
+$$ \boxed{ b=\left\lceil\frac{r}{bfr}\right\rceil } $$
+Hash
+$$ \boxed{h(K)=K\bmod m} $$
+
+when modulo hashing is specified.
