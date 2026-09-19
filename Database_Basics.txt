@@ -598,3 +598,147 @@ SQL has three-valued logic.
 DISTINCT applies to the selected combination.
 CASE conditions are evaluated in order.
 SQL logical order starts with FROM, not SELECT.
+
+
+
+
+
+
+5. NORMALIZATION
+5.1 Purpose
+
+Normalization reduces:
+
+Redundancy
+Update anomaly
+Insertion anomaly
+Deletion anomaly
+5.2 1NF
+
+A relation is in 1NF if attributes contain atomic values and there are no repeating groups.
+
+Does 1NF guarantee no redundancy?
+
+No.
+
+5.3 2NF ⭐⭐⭐⭐⭐
+
+Requirements:
+
+Relation is in 1NF.
+No partial dependency of a non-prime attribute on a candidate key.
+Partial Dependency
+
+Suppose candidate key:
+
+$$ AB $$
+
+and:
+
+$$ A\rightarrow C $$
+
+where C is non-prime.
+
+Then partial dependency exists.
+
+Important shortcut
+
+If all candidate keys are single-attribute, then partial dependency cannot occur.
+
+Therefore:
+
+A 1NF relation with only single-attribute candidate keys is automatically in 2NF.
+
+5.4 Prime Attribute
+
+An attribute that belongs to at least one candidate key.
+
+Non-prime
+
+Doesn't belong to any candidate key.
+
+5.5 3NF ⭐⭐⭐⭐⭐
+
+For every non-trivial FD:
+
+$$ X\rightarrow A $$
+
+at least one must hold:
+
+X is a super key, OR
+A is a prime attribute.
+5.6 BCNF ⭐⭐⭐⭐⭐
+
+For every non-trivial FD:
+
+$$ X\rightarrow Y $$
+
+X must be a super key.
+
+Shortcut
+3NF:
+X is superkey OR RHS is prime
+
+BCNF:
+X MUST be superkey
+5.7 3NF vs BCNF
+
+BCNF is stricter than 3NF.
+
+A relation can be:
+
+3NF but NOT BCNF
+5.8 Classic Example
+$$ R(Student, Course, Instructor) $$
+
+FDs:
+
+$$ Course\rightarrow Instructor $$ $$ Instructor\rightarrow Course $$
+
+Candidate keys:
+
+Student + Course
+Student + Instructor
+
+Course and Instructor are prime attributes.
+
+Thus 3NF can hold even though Course/Instructor may not be superkeys.
+
+BCNF fails.
+
+5.9 Lossless Decomposition
+
+A decomposition is lossless if joining decomposed relations reconstructs the original relation without spurious tuples.
+
+For binary decomposition:
+
+$$ R\rightarrow R_1,R_2 $$
+
+a common condition is:
+
+$$ (R_1\cap R_2)\rightarrow R_1 $$
+
+or
+
+$$ (R_1\cap R_2)\rightarrow R_2 $$
+
+under \(F^+\).
+
+5.10 Dependency Preservation
+
+A decomposition is dependency preserving if the original dependencies can be enforced using the decomposed relations without requiring joins.
+
+🔥 Trap
+Lossless ≠ Dependency Preserving
+🔥 NORMALIZATION TRAPS
+1NF → atomic values.
+2NF → no partial dependency.
+3NF → superkey OR prime RHS.
+BCNF → every determinant is a superkey.
+Partial dependency requires composite candidate key.
+Single-attribute keys → no partial dependency.
+Prime = belongs to candidate key.
+BCNF stronger than 3NF.
+3NF can be not BCNF.
+Need candidate keys before deciding normal form.
+Lossless and dependency preservation are different properties.
