@@ -1,0 +1,92 @@
+1. DBMS FUNDAMENTALS & ARCHITECTURE
+1.1 Database
+
+A database is an organized collection of related data that can be efficiently stored, accessed, and managed.
+
+1.2 DBMS
+
+A Database Management System (DBMS) is software used to:
+
+Create databases
+Store data
+Retrieve data
+Update data
+Delete data
+Manage security
+Maintain integrity
+Handle concurrent users
+Provide backup and recovery
+1.3 File System vs DBMS
+File System	DBMS
+Data redundancy is common	Redundancy can be controlled
+Limited security	Better security
+Difficult concurrency control	Concurrency control
+Limited recovery	Backup/recovery mechanisms
+Program-data dependence	Data independence
+Difficult complex queries	SQL/query processing
+1.4 Three-Level Architecture ⭐⭐⭐⭐⭐
+External Level
+(View Level)
+      ↓
+Conceptual Level
+(Logical Level)
+      ↓
+Internal Level
+(Physical Level)
+External Level
+
+What individual users/applications see.
+
+Conceptual Level
+
+Overall logical structure of the database.
+
+Internal Level
+
+How data is physically stored.
+
+1.5 Data Independence ⭐⭐⭐⭐⭐
+Physical Data Independence
+
+Changes at internal/physical level without changing conceptual schema.
+
+Example:
+
+Change indexing/storage
+        ↓
+Logical schema unchanged
+Logical Data Independence
+
+Changes to conceptual schema without requiring changes to external views/programs.
+
+🔥 Trap
+Physical DI → Internal changes
+Logical DI  → Conceptual changes
+1.6 Schema vs Instance
+Schema
+
+Structure/design of database.
+
+Instance
+
+Actual data present at a particular moment.
+
+Schema → relatively stable
+Instance → changes frequently
+1.7 DBA
+
+Database Administrator responsibilities include:
+
+Authorization
+Security
+Backup
+Recovery
+Performance monitoring
+Storage management
+Database maintenance
+🔥 Traps
+Internal level → physical storage.
+Physical DI → internal-level changes.
+Logical DI → conceptual-level changes.
+Instance changes frequently.
+DBA handles authorization, backup and recovery.
