@@ -1,2127 +1,2960 @@
-1. DBMS FUNDAMENTALS & ARCHITECTURE
-1.1 Database
+# DATABASE MANAGEMENT SYSTEMS
 
-A database is an organized collection of related data that can be efficiently stored, accessed, and managed.
+## Professional Master Notes — Topics 1–13
 
-1.2 DBMS
+---
 
-A Database Management System (DBMS) is software used to:
+# 1. DBMS FUNDAMENTALS & ARCHITECTURE
 
-Create databases
-Store data
-Retrieve data
-Update data
-Delete data
-Manage security
-Maintain integrity
-Handle concurrent users
-Provide backup and recovery
-1.3 File System vs DBMS
-File System	DBMS
-Data redundancy is common	Redundancy can be controlled
-Limited security	Better security
-Difficult concurrency control	Concurrency control
-Limited recovery	Backup/recovery mechanisms
-Program-data dependence	Data independence
-Difficult complex queries	SQL/query processing
-1.4 Three-Level Architecture ⭐⭐⭐⭐⭐
-External Level
-(View Level)
-      ↓
-Conceptual Level
-(Logical Level)
-      ↓
-Internal Level
-(Physical Level)
-External Level
+## 1.1 Database
 
-What individual users/applications see.
+A **database** is an organized collection of logically related data that can be stored, accessed, managed, and updated efficiently.
 
-Conceptual Level
+### Example
 
-Overall logical structure of the database.
+A university database may contain:
 
-Internal Level
+* Student information
+* Department information
+* Course information
+* Faculty information
+* Enrollment records
+* Examination records
 
-How data is physically stored.
+---
 
-1.5 Data Independence ⭐⭐⭐⭐⭐
-Physical Data Independence
+## 1.2 Database Management System (DBMS)
 
-Changes at internal/physical level without changing conceptual schema.
+A **Database Management System (DBMS)** is software that provides an interface for creating, storing, retrieving, updating, securing, and managing data in a database.
 
-Example:
+### Major Functions of a DBMS
 
-Change indexing/storage
+1. Data storage and organization
+2. Data retrieval
+3. Data insertion, modification, and deletion
+4. Security and authorization
+5. Integrity constraint enforcement
+6. Transaction management
+7. Concurrency control
+8. Backup and recovery
+9. Query processing and optimization
+10. Data independence
+
+---
+
+## 1.3 Advantages of DBMS
+
+* Reduces unnecessary data redundancy
+* Improves data consistency
+* Supports controlled data sharing
+* Provides security and authorization
+* Enforces integrity constraints
+* Supports concurrent access
+* Provides transaction management
+* Provides backup and recovery
+* Provides data independence
+* Simplifies data management
+
+---
+
+## 1.4 Three-Level Database Architecture
+
+The three-level architecture separates the user view, logical structure, and physical storage of a database.
+
+### 1. External Level
+
+The **external level** describes how individual users or applications view the database.
+
+Different users may have different views of the same database.
+
+### 2. Conceptual Level
+
+The **conceptual level** describes the complete logical structure of the database.
+
+It includes:
+
+* Entities
+* Relationships
+* Attributes
+* Constraints
+* Tables and their logical relationships
+
+### 3. Internal Level
+
+The **internal level** describes how data is physically stored.
+
+It deals with:
+
+* Files
+* Pages
+* Blocks
+* Record layouts
+* Indexes
+* Storage structures
+
+### Architecture
+
+```text
+Users / Applications
         ↓
-Logical schema unchanged
-Logical Data Independence
-
-Changes to conceptual schema without requiring changes to external views/programs.
-
-🔥 Trap
-Physical DI → Internal changes
-Logical DI  → Conceptual changes
-1.6 Schema vs Instance
-Schema
-
-Structure/design of database.
-
-Instance
-
-Actual data present at a particular moment.
-
-Schema → relatively stable
-Instance → changes frequently
-1.7 DBA
-
-Database Administrator responsibilities include:
-
-Authorization
-Security
-Backup
-Recovery
-Performance monitoring
-Storage management
-Database maintenance
-🔥 Traps
-Internal level → physical storage.
-Physical DI → internal-level changes.
-Logical DI → conceptual-level changes.
-Instance changes frequently.
-DBA handles authorization, backup and recovery.
-
-
-
-
-
-
-
-
-
-2. RELATIONAL MODEL, KEYS & CONSTRAINTS
-2.1 Basic Terms
-Term	Meaning
-Relation	Table
-Tuple	Row
-Attribute	Column
-Domain	Allowed set of values
-Degree	Number of attributes
-Cardinality	Number of tuples
-🔥 Shortcut
-Degree → Columns
-Cardinality → Rows
-2.2 Keys
-Super Key
-
-Any set of attributes that uniquely identifies a tuple.
-
-It may contain unnecessary attributes.
-
-Candidate Key
-
-A minimal super key.
-
-Primary Key
-
-Candidate key selected as the main key.
-
-Only one primary key constraint is selected for a relation, though it can contain multiple attributes.
-
-Alternate Key
-
-Candidate key not selected as primary key.
-
-Foreign Key
-
-Attribute(s) referencing a candidate/primary key of another relation.
-
-Composite Key
-
-Key consisting of more than one attribute.
-
-2.3 Example
-
-Suppose:
-
-STUDENT(RollNo, Email, Name, Phone)
-
-If both RollNo and Email uniquely identify students:
-
-Candidate keys:
-RollNo
-Email
-
-If RollNo is selected:
-
-Primary key = RollNo
-Alternate key = Email
-2.4 Integrity Constraints
-Domain Integrity
-
-Values must belong to the valid domain.
-
-Entity Integrity
-
-Primary key cannot be NULL.
-
-Referential Integrity
-
-Foreign key must reference a valid key value, subject to the allowed NULL/action rules.
-
-Key Constraint
-
-Key values must uniquely identify tuples.
-
-🔥 Key Traps
-Every candidate key is a super key.
-Every super key is not necessarily a candidate key.
-Candidate key = minimal super key.
-Primary key = selected candidate key.
-Multiple candidate keys can exist.
-Entity integrity → PK cannot be NULL.
-Referential integrity → FK references a valid key.
-FK may contain NULL unless restricted by NOT NULL.
-Degree → columns.
-Cardinality → rows.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-3. FUNCTIONAL DEPENDENCIES & ATTRIBUTE CLOSURE
-3.1 Functional Dependency
-
-An FD:
-
-$$ X\rightarrow Y $$
-
-means:
-
-If two tuples have the same X value, they must have the same Y value.
-
-X = determinant.
-
-3.2 Types
-Trivial FD
-$$ X\rightarrow Y $$
-
-where:
-
-$$ Y\subseteq X $$
-
-Example:
-
-$$ AB\rightarrow A $$
-Non-trivial FD
-$$ Y\nsubseteq X $$
-Completely Non-trivial
-$$ X\cap Y=\emptyset $$
-3.3 Armstrong's Axioms ⭐⭐⭐⭐⭐
-Reflexivity
-
-If:
-
-$$ Y\subseteq X $$
-
-then:
-
-$$ X\rightarrow Y $$
-Augmentation
-
-If:
-
-$$ X\rightarrow Y $$
-
-then:
-
-$$ XZ\rightarrow YZ $$
-Transitivity
-
-If:
-
-$$ X\rightarrow Y $$
-
-and
-
-$$ Y\rightarrow Z $$
-
-then:
-
-$$ X\rightarrow Z $$
-Derived Rules
-Union
-$$ X\rightarrow Y,\ X\rightarrow Z $$
-
-then:
-
-$$ X\rightarrow YZ $$
-Decomposition
-$$ X\rightarrow YZ $$
-
-then:
-
-$$ X\rightarrow Y $$
-
-and:
-
-$$ X\rightarrow Z $$
-Pseudotransitivity
-
-If:
-
-$$ X\rightarrow Y $$
-
-and:
-
-$$ WY\rightarrow Z $$
-
-then:
-
-$$ WX\rightarrow Z $$
-3.4 Attribute Closure ⭐⭐⭐⭐⭐
-
-\(X^+\) = all attributes functionally determined by X.
-
-Candidate-key method
-Find attributes that don't appear on RHS.
-They must be included in every candidate key.
-Compute closure.
-If closure contains all attributes → super key.
-Check minimality → candidate key.
-Example
-$$ R(A,B,C,D,E) $$
-
-FDs:
-
-$$ A\rightarrow B $$ $$ B\rightarrow C $$ $$ CD\rightarrow E $$
-
-Consider:
-
-$$ AD^+ $$
-
-Start:
-
-AD
-
-A→B:
-
-ABD
-
-B→C:
-
-ABCD
-
-CD→E:
-
-ABCDE
-
-Therefore:
-
-$$ AD^+=ABCDE $$
-
-So AD is a super key.
-
-If minimal:
-
-$$ \boxed{AD=\text{Candidate Key}} $$
-🔥 FD Traps
-A→B does NOT imply B→A.
-Determinant is not automatically a candidate key.
-Closure must cover all attributes.
-Candidate key must be minimal.
-Attributes not appearing on RHS must be included in every candidate key under the standard setup.
-Candidate key → super key.
-Super key → not necessarily candidate key.
-4. SQL
-4.1 SQL Categories
-Category	Commands
-DDL	CREATE, ALTER, DROP, TRUNCATE
-DML	INSERT, UPDATE, DELETE
-DQL	SELECT
-DCL	GRANT, REVOKE
-TCL	COMMIT, ROLLBACK, SAVEPOINT
-
-Classification of some commands can vary slightly by textbook/DBMS, so focus on their actual behavior.
-
-4.2 DELETE vs TRUNCATE vs DROP
-DELETE
-DELETE FROM Student
-WHERE RollNo = 10;
-Removes rows.
-Can use WHERE.
-Table remains.
-TRUNCATE
-TRUNCATE TABLE Student;
-Removes all rows.
-No WHERE.
-Table structure remains.
-DROP
-DROP TABLE Student;
-Removes table structure and its data.
-🔥 Shortcut
-DELETE → selected rows
-TRUNCATE → all rows
-DROP → table itself
-4.3 SELECT
-SELECT Name, Marks
-FROM Student
-WHERE Marks > 80;
-4.4 DISTINCT
-SELECT DISTINCT Dept
-FROM Student;
-
-Removes duplicate result rows.
-
-Trap
-
-With multiple selected columns:
-
-SELECT DISTINCT Dept, Year
-
-uniqueness is considered for the combination of Dept and Year.
-
-4.5 Aggregate Functions
-COUNT
-SUM
-AVG
-MIN
-MAX
-COUNT(*)
-
-Counts rows.
-
-COUNT(column)
-
-Ignores NULL values.
-
-COUNT(DISTINCT column)
-
-Counts unique non-NULL values.
-
-🔥 Trap
-COUNT(*) → rows
-COUNT(col) → non-NULL col values
-COUNT(DISTINCT col) → unique non-NULL values
-4.6 WHERE vs HAVING ⭐⭐⭐⭐⭐
-WHERE
-
-Filters individual rows before grouping.
-
-HAVING
-
-Filters groups after grouping.
-
-Example:
-
-SELECT Dept, AVG(Marks)
-FROM Student
-GROUP BY Dept
-HAVING AVG(Marks) > 70;
-Shortcut
-WHERE → Rows
-HAVING → Groups
-4.7 SQL Logical Processing Order
-
-Conceptually:
-
-FROM
- ↓
-WHERE
- ↓
-GROUP BY
- ↓
-HAVING
- ↓
-SELECT
- ↓
-DISTINCT
- ↓
-ORDER BY
-4.8 Joins
-INNER JOIN
-
-Only matching rows.
-
-LEFT JOIN
-
-All rows from left + matching right rows.
-
-RIGHT JOIN
-
-All rows from right + matching left rows.
-
-FULL OUTER JOIN
-
-All rows from both sides.
-
-SELF JOIN
-
-A table joined with itself, usually using aliases.
-
-4.9 Join Duplication Trap ⭐⭐⭐⭐⭐
-
-Suppose:
-
-Department 1 → Many Employees
-
-Joining can produce multiple rows for the department.
-
-Therefore:
-
-COUNT(*)
-
-may count joined rows rather than distinct entities.
-
-Sometimes:
-
-COUNT(DISTINCT EmployeeID)
-
-is required.
-
-4.10 Subqueries
-IN
-
-Tests membership.
-
-EXISTS
-
-True if subquery returns at least one row.
-
-NOT EXISTS
-
-True when no matching row exists.
-
-ANY
-
-Condition true for at least one value.
-
-ALL
-
-Condition must be true for every value.
-
-Correlated Subquery
-
-Subquery depends on the current row of the outer query.
-
-4.11 NULL & Three-Valued Logic ⭐⭐⭐⭐⭐
-
-SQL uses:
-
-TRUE
-FALSE
-UNKNOWN
-Wrong
-WHERE Age = NULL
-Correct
-WHERE Age IS NULL
-
-NULL comparisons generally produce UNKNOWN.
-
-Important logic
-FALSE AND UNKNOWN = FALSE
-TRUE OR UNKNOWN = TRUE
-4.12 NOT IN + NULL Trap ⭐⭐⭐⭐⭐
-
-NOT IN can behave unexpectedly if the subquery/result contains NULL.
-
-Why?
-
-Because comparison can become UNKNOWN.
-
-Safer alternative in many cases:
-
-NOT EXISTS
-4.13 Set Operations
-UNION
-
-Removes duplicates.
-
-UNION ALL
-
-Keeps duplicates.
-
-INTERSECT
-
-Common rows.
-
-EXCEPT
-
-Rows in first result but not second.
-
-Set operands must be union-compatible.
-
-4.14 CASE
-
-Conditions are checked in order.
-
-CASE
-    WHEN Marks >= 90 THEN 'A'
-    WHEN Marks >= 80 THEN 'B'
-    ELSE 'C'
-END
-
-First matching condition is used.
-
-🔥 SQL TRAPS
-COUNT(*) counts rows.
-COUNT(column) ignores NULL.
-COUNT(DISTINCT column) ignores NULL.
-WHERE → rows.
-HAVING → groups.
-INNER → matches.
-LEFT → all left.
-RIGHT → all right.
-FULL → all both.
-ANY → at least one.
-ALL → every.
-EXISTS → at least one matching row.
-= NULL ❌.
-IS NULL ✅.
-NOT IN + NULL can produce unexpected results.
-UNION removes duplicates.
-UNION ALL keeps duplicates.
-Correlated subquery depends on outer row.
-JOIN can multiply rows.
-SQL has three-valued logic.
-DISTINCT applies to the selected combination.
-CASE conditions are evaluated in order.
-SQL logical order starts with FROM, not SELECT.
-
-
-
-
-
-
-5. NORMALIZATION
-5.1 Purpose
-
-Normalization reduces:
-
-Redundancy
-Update anomaly
-Insertion anomaly
-Deletion anomaly
-5.2 1NF
-
-A relation is in 1NF if attributes contain atomic values and there are no repeating groups.
-
-Does 1NF guarantee no redundancy?
-
-No.
-
-5.3 2NF ⭐⭐⭐⭐⭐
-
-Requirements:
-
-Relation is in 1NF.
-No partial dependency of a non-prime attribute on a candidate key.
-Partial Dependency
-
-Suppose candidate key:
-
-$$ AB $$
-
-and:
-
-$$ A\rightarrow C $$
-
-where C is non-prime.
-
-Then partial dependency exists.
-
-Important shortcut
-
-If all candidate keys are single-attribute, then partial dependency cannot occur.
-
-Therefore:
-
-A 1NF relation with only single-attribute candidate keys is automatically in 2NF.
-
-5.4 Prime Attribute
-
-An attribute that belongs to at least one candidate key.
-
-Non-prime
-
-Doesn't belong to any candidate key.
-
-5.5 3NF ⭐⭐⭐⭐⭐
-
-For every non-trivial FD:
-
-$$ X\rightarrow A $$
-
-at least one must hold:
-
-X is a super key, OR
-A is a prime attribute.
-5.6 BCNF ⭐⭐⭐⭐⭐
-
-For every non-trivial FD:
-
-$$ X\rightarrow Y $$
-
-X must be a super key.
-
-Shortcut
-3NF:
-X is superkey OR RHS is prime
-
-BCNF:
-X MUST be superkey
-5.7 3NF vs BCNF
-
-BCNF is stricter than 3NF.
-
-A relation can be:
-
-3NF but NOT BCNF
-5.8 Classic Example
-$$ R(Student, Course, Instructor) $$
-
-FDs:
-
-$$ Course\rightarrow Instructor $$ $$ Instructor\rightarrow Course $$
-
-Candidate keys:
-
-Student + Course
-Student + Instructor
-
-Course and Instructor are prime attributes.
-
-Thus 3NF can hold even though Course/Instructor may not be superkeys.
-
-BCNF fails.
-
-5.9 Lossless Decomposition
-
-A decomposition is lossless if joining decomposed relations reconstructs the original relation without spurious tuples.
-
-For binary decomposition:
-
-$$ R\rightarrow R_1,R_2 $$
-
-a common condition is:
-
-$$ (R_1\cap R_2)\rightarrow R_1 $$
-
-or
-
-$$ (R_1\cap R_2)\rightarrow R_2 $$
-
-under \(F^+\).
-
-5.10 Dependency Preservation
-
-A decomposition is dependency preserving if the original dependencies can be enforced using the decomposed relations without requiring joins.
-
-🔥 Trap
-Lossless ≠ Dependency Preserving
-🔥 NORMALIZATION TRAPS
-1NF → atomic values.
-2NF → no partial dependency.
-3NF → superkey OR prime RHS.
-BCNF → every determinant is a superkey.
-Partial dependency requires composite candidate key.
-Single-attribute keys → no partial dependency.
-Prime = belongs to candidate key.
-BCNF stronger than 3NF.
-3NF can be not BCNF.
-Need candidate keys before deciding normal form.
-Lossless and dependency preservation are different properties.
-
-
-
-
-
-
-
-
-6. TRANSACTIONS & SERIALIZABILITY
-6.1 Transaction
-
-A transaction is a logical unit of database operations.
-
-6.2 ACID ⭐⭐⭐⭐⭐
-Atomicity
-
-All operations or none.
-
-Consistency
-
-Valid database state → valid database state.
-
-Isolation
-
-Concurrent transactions behave appropriately, ideally as if executed serially according to the chosen isolation/serializability guarantees.
-
-Durability
-
-Committed effects survive failures.
-
-6.3 Transaction States
-Active
- ↓
-Partially Committed
- ↓
-Committed
-
-Failure:
-
-Active
- ↓
-Failed
- ↓
-Aborted
-6.4 Schedule
-
-A schedule is an ordering/interleaving of operations from transactions that preserves each transaction's internal order.
-
-Serial Schedule
-
-Transactions execute one after another.
-
-Non-Serial
-
-Operations are interleaved.
-
-Important
-Non-serial ≠ Non-serializable
-
-A nonserial schedule can still be serializable.
-
-6.5 Conflicting Operations ⭐⭐⭐⭐⭐
-
-Two operations conflict if:
-
-They belong to different transactions.
-They operate on the same data item.
-At least one is a write.
-
-Therefore:
-
-RR → No conflict
-RW → Conflict
-WR → Conflict
-WW → Conflict
-6.6 Precedence Graph
-
-Create:
-
-One node per transaction
-
-Add:
-
-$$ T_i\rightarrow T_j $$
-
-if a conflicting operation of Ti occurs before Tj.
-
-Result:
-Acyclic graph
-→ Conflict serializable
-
-Cycle
-→ NOT conflict serializable
-6.7 Serial Order
-
-If graph is acyclic, perform topological ordering.
-
-The topological order gives an equivalent serial order.
-
-6.8 Recoverable Schedule
-
-If Tj reads data written by Ti:
-
-$$ Ti \text{ must commit before } Tj $$
-6.9 Cascadeless
-
-Transactions read only values written by committed transactions.
-
-6.10 Strict
-
-If Ti writes X, no other transaction can read/write X until Ti commits or aborts.
-
-Relationship:
-
-$$ \boxed{Strict\Rightarrow Cascadeless\Rightarrow Recoverable} $$
-6.11 View Serializability
-
-Conflict serializability is more restrictive.
-
-$$ Conflict\ Serializable \Rightarrow View\ Serializable $$
-
-Reverse is not necessarily true.
-
-🔥 TRANSACTION TRAPS
-Serial schedule → conflict serializable.
-Nonserial doesn't mean nonserializable.
-RR → no conflict.
-RW/WR/WW → conflict.
-Same data item is required.
-Cycle → not conflict serializable.
-Acyclic → conflict serializable.
-Topological order → serial order.
-Recoverable → commit dependency.
-Cascadeless → read only committed writes.
-Strict → prevents reads/writes of uncommitted written item.
-Strict ⇒ Cascadeless ⇒ Recoverable.
-Conflict serializable ⇒ View serializable.
-
-
-
-
-
-
-7. CONCURRENCY CONTROL
-7.1 Problems
-Lost Update
-
-One transaction's update gets overwritten.
-
-Dirty Read
-
-Reading uncommitted data.
-
-Unrepeatable Read
-
-Same row gives different values when read again.
-
-Phantom Read
-
-Repeated query returns a different set of rows because another transaction inserted/deleted matching rows.
-
-7.2 Locks
-Shared Lock (S)
-
-Used for reading.
-
-Multiple S locks can coexist.
-
-Exclusive Lock (X)
-
-Used for writing.
-
-X is incompatible with S and X.
-
-7.3 Compatibility
-	S	X
-S	✅	❌
-X	❌	❌
-7.4 Two-Phase Locking (2PL)
-Growing Phase
-
-Acquire locks.
-
-Shrinking Phase
-
-Release locks.
-
-After the first lock is released:
-
-No new lock can be acquired under standard 2PL.
-
-2PL guarantees conflict serializability but can cause deadlocks.
-
-7.5 Strict 2PL
-
-Holds X locks until commit/abort.
-
-7.6 Rigorous 2PL
-
-Holds both S and X locks until commit/abort.
-
-Relationship:
-
-$$ \boxed{Rigorous\Rightarrow Strict\Rightarrow 2PL} $$
-7.7 Deadlock
-
-Transactions wait for each other indefinitely.
-
-Wait-for graph:
-
-T1 → T2
-T2 → T1
-
-Cycle = deadlock.
-
-7.8 Wait-Die ⭐⭐⭐⭐⭐
-
-Older transaction requests younger's lock:
-
-Older → waits
-
-Younger requests older's lock:
-
-Younger → dies/aborts
-Memory
-
-Wait-Die: Older waits, younger dies.
-
-7.9 Wound-Wait
-
-Older requests younger's resource:
-
-Younger → aborted/wounded
-
-Younger requests older's resource:
-
-Younger → waits
-Memory
-
-Wound-Wait: Older wounds, younger waits.
-
-7.10 Timestamp Ordering
-
-Each transaction gets a timestamp.
-
-Smaller timestamp:
-
-Older transaction.
-
-Maintain:
-
-ReadTS(X)
-WriteTS(X)
-
-Basic timestamp ordering aborts a transaction when an operation violates the required timestamp order.
-
-🔥 CONCURRENCY TRAPS
-S-S compatible.
-S-X incompatible.
-X-X incompatible.
-2PL → growing + shrinking.
-After releasing first lock → no new lock under standard 2PL.
-2PL guarantees conflict serializability.
-2PL can still deadlock.
-Strict 2PL → X locks till commit/abort.
-Rigorous → S and X till commit/abort.
-Rigorous ⇒ Strict ⇒ 2PL.
-Wait-for cycle → deadlock.
-Wait-Die → older waits, younger dies.
-Wound-Wait → older wounds, younger waits.
-Smaller timestamp → older.
-Timestamp ordering avoids lock-wait deadlocks.
-
-
-
-
-
-
-
-
-
-8. INDEXING
-8.1 Index
-
-An index maps a search key to locations/pointers for finding records more efficiently.
-
-8.2 Dense Index
-
-Has an index entry for every search-key value/record according to the indexing scheme.
-
-Advantage
-
-Fast lookup.
-
-Disadvantage
-
-More space.
-
-8.3 Sparse Index
-
-Contains fewer entries.
-
-Generally requires ordered data.
-
-🔥 Trap
-
-Sparse indexes generally require the data file to be ordered on the search key.
-
-8.4 Primary vs Secondary Index
-Primary Index
-
-Typically associated with the ordering/primary search key.
-
-Secondary Index
-
-Built on a non-ordering attribute.
-
-8.5 Multilevel Index
-
-Index built on top of another index.
-
-Top Index
-   ↓
-Index
-   ↓
-Data
-
-Reduces search cost.
-
-8.6 B-Tree / B+ Tree
-
-Balanced multiway trees.
-
-8.7 B+ Tree ⭐⭐⭐⭐⭐
-
-Important properties:
-
-Internal nodes contain search keys and child pointers.
-Actual data-record pointers are at leaf level in the common DBMS representation.
-Leaf nodes are linked.
-Balanced tree.
-Good for range queries.
-8.8 B+ Tree Order
-
-For order \(m\):
-
-$$ \boxed{\text{Maximum children}=m} $$
-
-and:
-
-$$ \boxed{\text{Maximum keys}=m-1} $$
-
-Minimum occupancy depends on the exact convention/question.
-
-Root is a special case.
-8.9 B+ Tree Search
-
-Height is logarithmic.
-
-Roughly:
-
-$$ O(\log_m N) $$
-8.10 B+ Tree Insertion
-
-If node overflows:
-
-Overflow
- ↓
-Split
- ↓
-Propagate separator
-
-Root split can increase tree height.
-
-8.11 Deletion
-
-If underflow occurs:
-
-Redistribute
-or
-Merge
-
-Root merge can reduce height.
-
-8.12 Hashing
-
-Hash function maps key to bucket.
-
-Example:
-
-$$ h(K)=K\bmod m $$
-
-If:
-
-$$ K=17,\ m=5 $$
-
-then:
-
-$$ h(17)=2 $$
-8.13 Collision
-
-Different keys map to the same bucket.
-
-Collision handling includes:
-
-Chaining
-Overflow buckets
-Open addressing in suitable hashing structures
-8.14 B+ Tree vs Hash
-B+ Tree	Hash
-Ordered	Not inherently ordered
-Range queries good	Range queries poor
-Equality good	Equality excellent
-Supports sorted traversal	No natural sorted traversal
-🔥 Shortcut
-B+ Tree → Range
-Hash → Equality
-🔥 INDEXING TRAPS
-Dense → many index entries.
-Sparse → fewer entries.
-Sparse generally requires ordered data.
-B+ tree data pointers → leaves.
-B+ tree leaves linked.
-Order m → max m children.
-Max keys → m−1.
-Root has special occupancy rules.
-Overflow → split.
-Root split → height may increase.
-Underflow → redistribution/merge.
-Hash collision → different keys same bucket.
-Hash → equality.
-B+ tree → range/order.
-
-
-
-
-
-
-
-
-
-
-
-
-9. RELATIONAL ALGEBRA
-
-Relational Algebra is a procedural query language.
-
-9.1 Basic Operators
-Operator	Meaning
-σ	Selection
-π	Projection
-∪	Union
-−	Difference
-×	Cartesian product
-ρ	Rename
-
-Derived/common:
-
-⋈ → Join
-∩ → Intersection
-÷ → Division
-9.2 Selection
-$$ \sigma_{condition}(R) $$
-
-Selects rows/tuples.
-
-Shortcut
-σ → Rows
-9.3 Projection
-$$ \pi_{attributes}(R) $$
-
-Selects columns/attributes.
-
-In classical relational algebra, projection removes duplicates because relations are sets.
-
-Shortcut
-π → Columns
-9.4 Union
-$$ R\cup S $$
-
-Requires union compatibility.
-
-9.5 Difference
-$$ R-S $$
-
-Means tuples in R but not S.
-
-Generally:
-
-$$ R-S\neq S-R $$
-9.6 Cartesian Product
-$$ R\times S $$
-
-If:
-
-$$ |R|=m,\ |S|=n $$
-
-then:
-
-$$ \boxed{|R\times S|=mn} $$
-9.7 Rename
-$$ \rho $$
-
-Used to rename relations/attributes.
-
-Especially useful for self-joins.
-
-9.8 Join
-
-Combines related tuples.
-
-Theta Join
-
-Join using explicit condition.
-
-Natural Join
-
-Uses common attributes and eliminates duplicate common attributes in the result.
-
-9.9 Division ⭐⭐⭐⭐⭐
-
-Used for "for all" queries.
-
-Example:
-
-Find students who completed all required courses.
-
-Think:
-
-Division → FOR ALL
-9.10 Selection Pushdown
-
-Filtering before a join can reduce intermediate results.
-
-Selection
-   ↓
-Join
-
-instead of:
-
-Join
- ↓
-Selection
-
-when the transformation is valid.
-
-🔥 RELATIONAL ALGEBRA TRAPS
-σ → rows.
-π → columns.
-Classical projection removes duplicates.
-R−S ≠ S−R generally.
-Union needs compatibility.
-Cartesian product → multiply cardinalities.
-Natural join → common attributes.
-Natural join removes duplicate common attribute.
-Division → “for all”.
-Rename → useful in self-join.
-Selection pushdown can reduce intermediate results.
-
-
-
-
-
-
-
-
-
-
-
-10. QUERY PROCESSING & OPTIMIZATION
-10.1 Query Processing
-
-General flow:
-
-SQL
- ↓
-Parsing / Translation
- ↓
-Query Representation
- ↓
-Optimization
- ↓
-Execution
-10.2 Query Optimizer
-
-Goal:
-
-Find a semantically equivalent execution plan with lower cost.
-
-Cost can include:
-
-Disk I/O
-CPU
-Memory
-Intermediate result size
-Network cost in distributed systems
-10.3 Query Tree
-
-Example:
-
-       π Name
-          |
-      σ Marks>80
-          |
-       STUDENT
-
-Execution generally proceeds from lower nodes toward the root.
-
-10.4 Selection Pushdown
-
-Instead of:
-
-Join
- ↓
-Selection
-
-often transform to:
-
-       Join
-      /    \
-Selection   S
-   |
-   R
-
-if condition only applies to R.
-
-This reduces tuples entering the join.
-
-10.5 Projection Pushdown
-
-Remove unnecessary columns early when safe.
-
-Reduces tuple width and intermediate data size.
-
-10.6 Join Algorithms
-Nested-Loop Join
-
-For each tuple/block of outer relation, examine inner relation.
-
-General but can be expensive.
-
-Indexed Nested-Loop
-
-Uses index on inner relation's join attribute.
-
-Sort-Merge Join
-Sort R
-Sort S
-Merge
-
-Good when data is sorted or sorting is beneficial.
-
-Hash Join
-Build hash structure
+External / View Level
         ↓
-Probe
+Conceptual / Logical Level
+        ↓
+Internal / Physical Level
+        ↓
+Physical Storage
+```
 
-Especially good for equality joins.
+---
 
-10.7 Query Cost
+## 1.5 Data Independence
 
-Disk/page I/O is a major cost.
+Data independence means changing one level of the database architecture without requiring unnecessary changes at higher levels.
 
-Optimizer often attempts to minimize:
+### Physical Data Independence
 
-$$ \boxed{\text{Page I/Os}} $$
-10.8 Materialization vs Pipelining
-Materialization
-
-Intermediate result fully computed/stored.
-
-Pipelining
-
-Tuples flow directly between operators.
-
-Operator A → Operator B → Operator C
-🔥 QUERY PROCESSING TRAPS
-Optimization changes execution strategy, not result.
-Disk I/O is a major cost.
-Selection pushdown → fewer tuples.
-Projection pushdown → fewer attributes.
-Hash join → equality joins.
-Sort-merge → sorting/merging.
-Indexed nested-loop → can exploit inner index.
-Query trees represent relational operations.
-Equivalent trees can have different costs.
-Pipelining avoids fully materializing every intermediate result.
-Don't use a nested-loop cost formula without checking assumptions.
-
-
-
-
-11. ER MODEL
-11.1 Entity
-
-A distinguishable real-world object.
+The ability to change the **internal/physical schema** without changing the conceptual schema.
 
 Examples:
 
-Student
-Employee
-Book
-Customer
-Entity Set
+* Changing file organization
+* Adding an index
+* Changing storage structures
+* Changing page allocation
 
-Collection of similar entities.
+### Logical Data Independence
 
-11.2 Attributes
-Simple
+The ability to change the **conceptual schema** without requiring changes to external views or application programs.
 
-Cannot be meaningfully divided.
+Examples:
 
-Composite
+* Adding a new attribute
+* Adding a new relation
+* Modifying logical relationships
 
-Can be divided.
+### Key Distinction
 
-Example:
+| Type                       | Change occurs at | Higher level protected |
+| -------------------------- | ---------------- | ---------------------- |
+| Physical Data Independence | Internal level   | Conceptual level       |
+| Logical Data Independence  | Conceptual level | External level         |
 
-Name
- ├── First
- └── Last
-Single-Valued
+---
 
-One value per entity.
+## 1.6 Schema and Instance
 
-Multivalued
+### Schema
 
-Multiple values.
-
-Example:
-
-PhoneNumbers
-Stored
-
-Actually stored.
-
-Derived
-
-Calculated.
+The **schema** is the structure or design of a database.
 
 Example:
 
-Age ← DateOfBirth
-11.3 Key Attribute
+```text
+Student(RollNo, Name, Marks, DeptID)
+```
 
-Uniquely identifies entity.
+The schema normally changes infrequently.
 
-Traditionally represented by underlining.
+### Instance
 
-11.4 Relationship
-
-Association between entities.
-
-STUDENT ─── ENROLLS ─── COURSE
-11.5 Relationship Degree
-
-Number of participating entity sets.
-
-Unary
-
-One entity set.
-
-Binary
-
-Two.
-
-Ternary
-
-Three.
-
-🔥 Trap
-
-Degree ≠ number of attributes.
-
-11.6 Cardinality ⭐⭐⭐⭐⭐
-1:1
-1:N
-N:1
-M:N
-
-Means mapping ratio.
-
-Shortcut
-
-Cardinality → HOW MANY?
-
-11.7 Participation
-Total
-
-Every entity must participate.
-
-Partial
-
-Participation optional.
-
-Shortcut
-
-Participation → MUST OR OPTIONAL?
-
-11.8 Weak Entity ⭐⭐⭐⭐⭐
-
-A weak entity:
-
-Does not have a complete key of its own.
-Depends on an owner/strong entity.
-Has a partial key.
-Has total participation in identifying relationship.
-
-Traditional notation:
-
-Double rectangle → Weak entity
-Double diamond → Identifying relationship
-11.9 Relationship Attributes
-
-An attribute can belong to a relationship.
+An **instance** is the actual data stored in the database at a particular point in time.
 
 Example:
 
-STUDENT ─ ENROLLS ─ COURSE
-               |
-             Grade
+```text
+101 | Rahul | 85 | 10
+102 | Priya | 91 | 20
+```
 
-Grade belongs to the particular enrollment.
+The instance changes frequently.
 
-11.10 Specialization
+---
 
-Top-down.
+## 1.7 Database Administrator (DBA)
 
-EMPLOYEE
- /     \
-FACULTY STAFF
-11.11 Generalization
+A DBA is responsible for managing and maintaining the database system.
 
-Bottom-up.
+### Major Responsibilities
 
-CAR       TRUCK
-  \       /
-   VEHICLE
-Shortcut
-Specialization → TOP → DOWN
-Generalization → BOTTOM → UP
-11.12 Disjoint vs Overlapping
-Disjoint
+* User authorization
+* Security management
+* Backup and recovery
+* Storage management
+* Performance monitoring
+* Database maintenance
+* Integrity enforcement
+* Access control
+* Resource management
 
-Entity can belong to at most one subclass.
+---
 
-Overlapping
+# 2. RELATIONAL MODEL, KEYS & INTEGRITY CONSTRAINTS
 
-Entity can belong to multiple subclasses.
+## 2.1 Relational Model
 
-11.13 Total vs Partial Specialization
-Total
+The relational model represents data using **relations**, commonly implemented as tables.
 
-Every superclass entity must belong to a subclass.
+### Basic Terminology
 
-Partial
+| Relational Term | Common Database Term  |
+| --------------- | --------------------- |
+| Relation        | Table                 |
+| Tuple           | Row                   |
+| Attribute       | Column                |
+| Domain          | Allowed set of values |
+| Cardinality     | Number of tuples      |
+| Degree          | Number of attributes  |
 
-Some superclass entities may belong to no subclass.
+---
 
-11.14 ER → Relational Mapping
-Strong Entity
+## 2.2 Keys
 
-Create relation.
+A key is an attribute or combination of attributes used to identify tuples.
 
-Composite Attribute
+### Super Key
 
-Store components.
+A **super key** is any set of attributes that uniquely identifies a tuple.
 
-Multivalued Attribute
+A super key may contain unnecessary attributes.
 
-Create separate relation.
+### Candidate Key
 
-Example:
+A **candidate key** is a minimal super key.
 
-STUDENT_PHONE(RollNo, Phone)
-1:N Relationship
+It uniquely identifies a tuple and contains no unnecessary attribute.
 
-Put FK of the 1-side into the N-side.
+### Primary Key
 
-DEPARTMENT 1 ─── N EMPLOYEE
+A **primary key** is the candidate key selected as the main identifier of tuples.
 
-EMPLOYEE(..., DeptID)
-M:N Relationship
+Properties:
 
-Create separate relation:
+* Uniquely identifies tuples
+* Cannot contain NULL values
+* A table has one primary-key constraint
+* It may consist of multiple attributes
 
-ENROLLMENT(StudentID, CourseID)
+### Alternate Key
 
-Relationship attributes also go there:
+A candidate key that was not selected as the primary key.
 
-ENROLLMENT(StudentID, CourseID, Grade)
-🔥 ER TRAPS
-Entity = individual object.
-Entity set = collection.
-Composite ≠ multivalued.
-Derived attribute = calculated.
-Degree = participating entity sets.
-Cardinality = mapping ratio.
-Participation = mandatory/optional.
-Weak entity lacks complete key.
-Weak entity depends on owner.
-Specialization = top-down.
-Generalization = bottom-up.
-Disjoint ≠ total participation.
-1:N → FK generally on N-side.
-M:N → separate relation.
-Multivalued attribute → separate relation.
+### Foreign Key
 
+A foreign key is an attribute or set of attributes that references a candidate/primary key of another relation.
 
+### Composite Key
 
-
-
-12. DATABASE RECOVERY
-12.1 Purpose
-
-Recovery restores the database to a consistent state after failures.
-
-12.2 Failure Types
-Transaction Failure
-
-Individual transaction fails.
-
-System Crash
-
-Volatile memory contents may be lost.
-
-Media Failure
-
-Storage itself is damaged.
-
-May require:
-
-Backup + Recovery
-12.3 Log-Based Recovery
-
-Log records changes.
+A key consisting of more than one attribute.
 
 Example:
 
-<T1, START>
-<T1, A, old, new>
-<T1, COMMIT>
-12.4 Write-Ahead Logging (WAL) ⭐⭐⭐⭐⭐
+```text
+Enrollment(StudentID, CourseID, Grade)
+```
 
-Rule:
+`(StudentID, CourseID)` may form a composite key.
 
-Log record must reach stable storage before the corresponding modified data page is written.
+---
 
-Transaction
- ↓
-Log
- ↓
-Stable Storage
- ↓
-Data Page
+## 2.3 SQL Example: Keys
 
-Before commit is acknowledged, necessary commit log information must be safely stored according to the recovery protocol.
+```sql
+CREATE TABLE Department (
+    DeptID INT PRIMARY KEY,
+    DeptName VARCHAR(50)
+);
 
-12.5 UNDO
+CREATE TABLE Student (
+    RollNo INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Marks INT,
+    DeptID INT,
+    FOREIGN KEY (DeptID)
+        REFERENCES Department(DeptID)
+);
+```
 
-Restore old value.
+---
 
-Old = 100
-New = 50
+## 2.4 Integrity Constraints
 
-UNDO → 100
-12.6 REDO
+### Domain Integrity
 
-Reapply new value.
+Ensures that attribute values belong to their valid domain.
 
-Old = 100
-New = 50
+Examples:
 
-REDO → 50
-12.7 Deferred Update ⭐⭐⭐⭐⭐
+* Integer values for integer columns
+* Valid date values
+* Restricted values using CHECK
 
-Database modification is delayed until commit.
+### Entity Integrity
 
-Generally:
+A primary key cannot contain NULL values.
 
-$$ \boxed{Deferred\rightarrow REDO} $$
+### Referential Integrity
 
-No database changes from an uncommitted transaction need to be undone because they haven't been installed in the database under the basic deferred-update model.
+A foreign-key value must correspond to an appropriate referenced key value, subject to NULL and referential-action rules.
 
-12.8 Immediate Update ⭐⭐⭐⭐⭐
+### Key Constraint
 
-Database may be modified before commit.
+Ensures that key values uniquely identify tuples.
+
+---
+
+## 2.5 NULL
+
+NULL represents an unknown, missing, or not-applicable value.
+
+NULL is not:
+
+* Zero
+* An empty string
+* False
+
+### Correct NULL Comparison
+
+```sql
+SELECT *
+FROM Student
+WHERE Marks IS NULL;
+```
+
+```sql
+SELECT *
+FROM Student
+WHERE Marks IS NOT NULL;
+```
+
+Using:
+
+```sql
+Marks = NULL
+```
+
+does not correctly test for NULL.
+
+---
+
+# 3. FUNCTIONAL DEPENDENCIES & ATTRIBUTE CLOSURE
+
+## 3.1 Functional Dependency
+
+A functional dependency is written as:
+
+```text
+X → Y
+```
+
+It means that if two tuples have the same value of `X`, they must have the same value of `Y`.
+
+`X` is called the **determinant** and `Y` is the **dependent**.
+
+---
+
+## 3.2 Types of Functional Dependencies
+
+### Trivial Functional Dependency
+
+```text
+X → Y
+```
+
+is trivial when:
+
+```text
+Y ⊆ X
+```
+
+Example:
+
+```text
+AB → A
+```
+
+### Non-Trivial Functional Dependency
+
+```text
+X → Y
+```
+
+where:
+
+```text
+Y ⊄ X
+```
+
+### Completely Non-Trivial Functional Dependency
+
+When:
+
+```text
+X ∩ Y = ∅
+```
+
+---
+
+## 3.3 Armstrong's Axioms
+
+### Reflexivity
+
+If:
+
+```text
+Y ⊆ X
+```
+
+then:
+
+```text
+X → Y
+```
+
+### Augmentation
+
+If:
+
+```text
+X → Y
+```
+
+then:
+
+```text
+XZ → YZ
+```
+
+### Transitivity
+
+If:
+
+```text
+X → Y
+Y → Z
+```
+
+then:
+
+```text
+X → Z
+```
+
+---
+
+## 3.4 Derived Rules
+
+### Union
+
+If:
+
+```text
+X → Y
+X → Z
+```
+
+then:
+
+```text
+X → YZ
+```
+
+### Decomposition
+
+If:
+
+```text
+X → YZ
+```
+
+then:
+
+```text
+X → Y
+X → Z
+```
+
+### Pseudotransitivity
+
+If:
+
+```text
+X → Y
+WY → Z
+```
+
+then:
+
+```text
+WX → Z
+```
+
+---
+
+## 3.5 Attribute Closure
+
+The closure of attribute set `X`, written as:
+
+```text
+X+
+```
+
+is the set of all attributes functionally determined by `X`.
+
+### Example
+
+Consider:
+
+```text
+R(A, B, C, D, E)
+```
+
+with:
+
+```text
+A → B
+B → C
+CD → E
+```
+
+Find:
+
+```text
+AD+
+```
+
+Start:
+
+```text
+AD+ = {A, D}
+```
+
+Using:
+
+```text
+A → B
+```
+
+we get:
+
+```text
+{A, B, D}
+```
+
+Using:
+
+```text
+B → C
+```
+
+we get:
+
+```text
+{A, B, C, D}
+```
+
+Now:
+
+```text
+CD → E
+```
+
+therefore:
+
+```text
+AD+ = {A, B, C, D, E}
+```
+
+Since the closure contains all attributes, `AD` is a super key.
+
+If neither `A` nor `D` can be removed while preserving the full closure, `AD` is a candidate key.
+
+---
+
+## 3.6 Candidate Key Identification
+
+A practical procedure:
+
+1. Identify attributes that do not appear on the RHS of any FD.
+2. Such attributes generally need to be present in every candidate key.
+3. Compute the closure of a candidate attribute set.
+4. If closure contains all relation attributes, it is a super key.
+5. Test minimality.
+6. A minimal super key is a candidate key.
+
+### Important Principles
+
+* `A → B` does not imply `B → A`.
+* A determinant is not automatically a candidate key.
+* Closure containing all attributes means super key.
+* Candidate key additionally requires minimality.
+
+---
+
+# 4. SQL
+
+## 4.1 SQL Categories
+
+### DDL — Data Definition Language
+
+Used to define database structures.
+
+Examples:
+
+```text
+CREATE
+ALTER
+DROP
+TRUNCATE
+```
+
+### DML — Data Manipulation Language
+
+Used to modify stored data.
+
+Examples:
+
+```text
+INSERT
+UPDATE
+DELETE
+```
+
+### DQL — Data Query Language
+
+Used to retrieve data.
+
+```text
+SELECT
+```
+
+### DCL — Data Control Language
+
+Used for authorization and access control.
+
+```text
+GRANT
+REVOKE
+```
+
+### TCL — Transaction Control Language
+
+Used to control transactions.
+
+```text
+COMMIT
+ROLLBACK
+SAVEPOINT
+```
+
+---
+
+## 4.2 Basic SQL Operations
+
+### CREATE
+
+```sql
+CREATE TABLE Student (
+    RollNo INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Marks INT
+);
+```
+
+### INSERT
+
+```sql
+INSERT INTO Student
+VALUES (101, 'Rahul', 85);
+```
+
+### SELECT
+
+```sql
+SELECT Name, Marks
+FROM Student;
+```
+
+### UPDATE
+
+```sql
+UPDATE Student
+SET Marks = 90
+WHERE RollNo = 101;
+```
+
+### DELETE
+
+```sql
+DELETE FROM Student
+WHERE RollNo = 101;
+```
+
+### ALTER
+
+```sql
+ALTER TABLE Student
+ADD Email VARCHAR(100);
+```
+
+### TRUNCATE
+
+```sql
+TRUNCATE TABLE Student;
+```
+
+### DROP
+
+```sql
+DROP TABLE Student;
+```
+
+---
+
+## 4.3 DELETE vs TRUNCATE vs DROP
+
+| Operation |      Removes Rows | Removes Structure | WHERE |
+| --------- | ----------------: | ----------------: | ----: |
+| DELETE    | Selected/all rows |                No |   Yes |
+| TRUNCATE  |          All rows |                No |    No |
+| DROP      |    Data and table |               Yes |    No |
+
+---
+
+## 4.4 Aggregate Functions
+
+Common aggregate functions:
+
+```text
+COUNT()
+SUM()
+AVG()
+MIN()
+MAX()
+```
+
+### COUNT Differences
+
+```sql
+COUNT(*)
+```
+
+Counts rows.
+
+```sql
+COUNT(Marks)
+```
+
+Counts non-NULL values in `Marks`.
+
+```sql
+COUNT(DISTINCT DeptID)
+```
+
+Counts distinct non-NULL department values.
+
+---
+
+## 4.5 GROUP BY and HAVING
+
+`GROUP BY` forms groups of rows.
+
+`HAVING` filters groups after grouping.
+
+```sql
+SELECT DeptID, AVG(Marks) AS AverageMarks
+FROM Student
+GROUP BY DeptID
+HAVING AVG(Marks) > 75;
+```
+
+### WHERE vs HAVING
+
+| WHERE                             | HAVING                                  |
+| --------------------------------- | --------------------------------------- |
+| Filters rows                      | Filters groups                          |
+| Applied before grouping           | Applied after grouping                  |
+| Normally used with row conditions | Commonly used with aggregate conditions |
+
+---
+
+## 4.6 Logical Processing Order
+
+A simplified logical order is:
+
+```text
+FROM
+↓
+WHERE
+↓
+GROUP BY
+↓
+HAVING
+↓
+SELECT
+↓
+DISTINCT
+↓
+ORDER BY
+```
+
+---
+
+## 4.7 Joins
+
+### INNER JOIN
+
+Returns matching rows from both relations.
+
+```sql
+SELECT S.Name, D.DeptName
+FROM Student S
+INNER JOIN Department D
+ON S.DeptID = D.DeptID;
+```
+
+### LEFT JOIN
+
+Returns all rows from the left relation and matching rows from the right relation.
+
+### RIGHT JOIN
+
+Returns all rows from the right relation and matching rows from the left relation.
+
+### FULL OUTER JOIN
+
+Returns rows from both relations, matching where possible.
+
+### SELF JOIN
+
+A table is joined with itself.
+
+```sql
+SELECT E.Name, M.Name AS Manager
+FROM Employee E
+JOIN Employee M
+ON E.ManagerID = M.EmployeeID;
+```
+
+---
+
+## 4.8 Join Multiplication
+
+In a one-to-many relationship, joining tables can produce multiple result rows for a single row from the first table.
+
+When counting entities after such joins, `COUNT(DISTINCT ...)` may be necessary.
+
+```sql
+SELECT COUNT(DISTINCT S.RollNo)
+FROM Student S
+JOIN Enrollment E
+ON S.RollNo = E.StudentID;
+```
+
+---
+
+## 4.9 Subqueries
+
+A subquery is a query nested inside another SQL statement.
+
+### IN
+
+Tests membership in a result set.
+
+```sql
+SELECT Name
+FROM Student
+WHERE DeptID IN (
+    SELECT DeptID
+    FROM Department
+    WHERE DeptName = 'CSE'
+);
+```
+
+### EXISTS
+
+Returns true when the subquery produces at least one qualifying row.
+
+```sql
+SELECT S.Name
+FROM Student S
+WHERE EXISTS (
+    SELECT 1
+    FROM Enrollment E
+    WHERE E.StudentID = S.RollNo
+);
+```
+
+### ANY
+
+The comparison must be true for at least one value returned by the subquery.
+
+### ALL
+
+The comparison must be true for every value returned by the subquery.
+
+---
+
+## 4.10 Correlated Subquery
+
+A correlated subquery refers to a column from the outer query.
+
+```sql
+SELECT S.Name, S.Marks
+FROM Student S
+WHERE S.Marks >
+(
+    SELECT AVG(S2.Marks)
+    FROM Student S2
+    WHERE S2.DeptID = S.DeptID
+);
+```
+
+The inner query is evaluated with respect to the current outer-row context.
+
+---
+
+## 4.11 NULL and Three-Valued Logic
+
+SQL conditions can evaluate to:
+
+```text
+TRUE
+FALSE
+UNKNOWN
+```
+
+UNKNOWN commonly occurs when NULL participates in a comparison.
+
+Important logical behavior:
+
+```text
+FALSE AND UNKNOWN = FALSE
+TRUE OR UNKNOWN = TRUE
+```
+
+Use:
+
+```sql
+IS NULL
+IS NOT NULL
+```
+
+instead of equality comparisons with NULL.
+
+When designing anti-match queries, `NOT EXISTS` can avoid the NULL-related behavior that can occur with `NOT IN`.
+
+---
+
+## 4.12 Set Operations
+
+### UNION
+
+Combines results and removes duplicate rows.
+
+### UNION ALL
+
+Combines results and retains duplicates.
+
+### INTERSECT
+
+Returns rows common to both result sets.
+
+### EXCEPT
+
+Returns rows present in the first result but not the second.
+
+The participating result sets must have compatible structures.
+
+---
+
+## 4.13 CASE Expression
+
+```sql
+SELECT Name,
+       CASE
+           WHEN Marks >= 90 THEN 'A'
+           WHEN Marks >= 80 THEN 'B'
+           ELSE 'C'
+       END AS Grade
+FROM Student;
+```
+
+Conditions are evaluated in the order written.
+
+---
+
+## 4.14 DISTINCT
+
+`DISTINCT` removes duplicate result rows based on the **combination of all selected expressions**.
+
+Example:
+
+```sql
+SELECT DISTINCT DeptID, Marks
+FROM Student;
+```
+
+The pair `(DeptID, Marks)` is considered as a combination.
+
+---
+
+# 5. NORMALIZATION
+
+## 5.1 Purpose of Normalization
+
+Normalization organizes relations to reduce:
+
+* Data redundancy
+* Update anomalies
+* Insertion anomalies
+* Deletion anomalies
+
+---
+
+## 5.2 First Normal Form — 1NF
+
+A relation is in 1NF when attribute values are atomic and repeating groups are eliminated.
+
+Example of non-atomic design:
+
+```text
+StudentID | PhoneNumbers
+101       | 9876, 8765
+```
+
+A normalized design stores phone values separately.
+
+---
+
+## 5.3 Second Normal Form — 2NF
+
+A relation is in 2NF when:
+
+1. It is in 1NF.
+2. No non-prime attribute is partially dependent on a candidate key.
+
+### Partial Dependency
+
+A non-prime attribute depends on only part of a composite candidate key.
+
+A partial dependency requires a composite candidate key.
+
+If every candidate key is single-attribute and the relation is in 1NF, the relation is automatically in 2NF.
+
+---
+
+## 5.4 Prime and Non-Prime Attributes
+
+### Prime Attribute
+
+An attribute belonging to at least one candidate key.
+
+### Non-Prime Attribute
+
+An attribute that belongs to no candidate key.
+
+---
+
+## 5.5 Third Normal Form — 3NF
+
+For every non-trivial functional dependency:
+
+```text
+X → A
+```
+
+at least one must hold:
+
+1. `X` is a super key, or
+2. `A` is a prime attribute.
+
+3NF allows certain dependencies involving prime attributes that BCNF does not allow.
+
+---
+
+## 5.6 Boyce-Codd Normal Form — BCNF
+
+A relation is in BCNF if for every non-trivial functional dependency:
+
+```text
+X → Y
+```
+
+`X` must be a super key.
+
+### Relationship
+
+```text
+BCNF is stricter than 3NF.
+```
 
 Therefore:
 
-$$ \boxed{Immediate\rightarrow UNDO+REDO} $$
-12.9 Checkpoint
+```text
+BCNF ⇒ 3NF
+```
 
-Reduces recovery work.
+but a relation can be in 3NF without being in BCNF.
 
-Earlier log
-   ↓
-CHECKPOINT
-   ↓
-Later log
-   ↓
-Crash
+---
 
-Checkpoint does not mean failures cannot happen.
+## 5.7 Example: 3NF but not BCNF
 
-12.10 Cascading Rollback
+Consider:
+
+```text
+R(Student, Course, Instructor)
+```
+
+with:
+
+```text
+Course → Instructor
+Instructor → Course
+```
+
+Possible candidate keys:
+
+```text
+(Student, Course)
+(Student, Instructor)
+```
+
+Both `Course` and `Instructor` are prime attributes.
+
+The relation can satisfy 3NF because the RHS attributes are prime.
+
+However, `Course` and `Instructor` are not necessarily super keys, so BCNF can fail.
+
+---
+
+## 5.8 Lossless Decomposition
+
+A decomposition is **lossless** if joining the decomposed relations recreates the original relation without generating spurious tuples or losing information.
+
+For a binary decomposition of `R` into `R1` and `R2`, a standard condition is that:
+
+```text
+(R1 ∩ R2) → R1
+```
+
+or
+
+```text
+(R1 ∩ R2) → R2
+```
+
+must hold under the relevant functional-dependency closure.
+
+---
+
+## 5.9 Dependency Preservation
+
+A decomposition is dependency preserving if the original functional dependencies can be enforced using the decomposed relations without requiring joins of those relations.
+
+### Important Distinction
+
+```text
+Lossless decomposition
+```
+
+and
+
+```text
+Dependency preservation
+```
+
+are separate properties.
+
+---
+
+# 6. TRANSACTIONS & SERIALIZABILITY
+
+## 6.1 Transaction
+
+A **transaction** is a logical unit of database operations that should be treated as a single unit of work.
+
+### Example: Bank Transfer
+
+```text
+T1:
+
+Read(A)
+A = A - 500
+Write(A)
+
+Read(B)
+B = B + 500
+Write(B)
+
+COMMIT
+```
+
+The transfer should not leave the database with only one account updated.
+
+---
+
+## 6.2 ACID Properties
+
+### Atomicity
+
+All operations of a transaction occur, or the transaction is rolled back.
+
+### Consistency
+
+A transaction takes the database from one valid state to another valid state while preserving defined constraints.
+
+### Isolation
+
+Concurrent transactions are controlled so that intermediate effects do not cause unacceptable interference.
+
+### Durability
+
+Once a transaction is committed, its effects survive appropriate system failures according to the recovery protocol.
+
+---
+
+## 6.3 Transaction States
+
+```text
+             Partially Committed
+            /                   \
+Active -----------------------> Committed
+  |
+  ↓
+Failed
+  |
+  ↓
+Aborted
+  |
+  ├── Restart
+  └── Terminate
+```
+
+---
+
+## 6.4 COMMIT
+
+`COMMIT` successfully completes the current transaction.
+
+```sql
+START TRANSACTION;
+
+UPDATE Account
+SET Balance = Balance - 500
+WHERE AccountID = 101;
+
+UPDATE Account
+SET Balance = Balance + 500
+WHERE AccountID = 102;
+
+COMMIT;
+```
+
+---
+
+## 6.5 ROLLBACK
+
+`ROLLBACK` undoes changes made by the current uncommitted transaction.
+
+```sql
+START TRANSACTION;
+
+UPDATE Account
+SET Balance = Balance - 500
+WHERE AccountID = 101;
+
+ROLLBACK;
+```
+
+---
+
+## 6.6 SAVEPOINT
+
+A savepoint creates an intermediate point to which a transaction can roll back.
+
+```sql
+START TRANSACTION;
+
+UPDATE Account
+SET Balance = Balance - 500
+WHERE AccountID = 101;
+
+SAVEPOINT P1;
+
+UPDATE Account
+SET Balance = Balance - 200
+WHERE AccountID = 102;
+
+ROLLBACK TO P1;
+
+COMMIT;
+```
+
+---
+
+## 6.7 Schedule
+
+A **schedule** is the order in which operations from multiple transactions are executed.
+
+### Serial Schedule
+
+Transactions execute one after another without interleaving.
+
+### Non-Serial Schedule
+
+Operations from multiple transactions are interleaved.
+
+A non-serial schedule may still be correct if it is serializable.
+
+---
+
+## 6.8 Conflicting Operations
+
+Two operations conflict when:
+
+1. They belong to different transactions.
+2. They operate on the same data item.
+3. At least one is a write.
+
+### Conflicts
+
+```text
+Read-Read     → No conflict
+Read-Write    → Conflict
+Write-Read    → Conflict
+Write-Write   → Conflict
+```
+
+---
+
+## 6.9 Conflict Serializability
+
+A schedule is conflict serializable if it is conflict-equivalent to some serial schedule.
+
+### Precedence Graph
+
+* Each transaction is represented by a node.
+* Add `Ti → Tj` when a conflicting operation of `Ti` occurs before the conflicting operation of `Tj`.
+
+### Result
+
+```text
+Acyclic graph → Conflict serializable
+Cyclic graph  → Not conflict serializable
+```
+
+A topological ordering of an acyclic graph can provide an equivalent serial order.
+
+---
+
+## 6.10 Recoverability
+
+### Recoverable Schedule
+
+If `Tj` reads data written by `Ti`, then `Ti` must commit before `Tj` commits.
+
+### Cascadeless Schedule
+
+Transactions read only committed data.
+
+This prevents cascading rollbacks caused by dirty reads.
+
+### Strict Schedule
+
+If a transaction writes an item, other transactions cannot read or write that item until the writing transaction commits or aborts.
+
+### Relationship
+
+```text
+Strict
+  ↓
+Cascadeless
+  ↓
+Recoverable
+```
+
+---
+
+## 6.11 View Serializability
+
+View serializability considers:
+
+* Initial reads
+* Read-from relationships
+* Final writes
+
+Conflict-serializable schedules are always view-serializable, while the reverse is not necessarily true.
+
+---
+
+# 7. CONCURRENCY CONTROL
+
+## 7.1 Purpose
+
+Concurrency control ensures that simultaneous transaction execution maintains database correctness.
+
+---
+
+## 7.2 Common Concurrency Problems
+
+### Lost Update
+
+One transaction's update is overwritten by another transaction.
+
+### Dirty Read
+
+A transaction reads data written by another transaction that has not committed.
+
+### Unrepeatable Read
+
+The same row produces different values when read again because another transaction modified it.
+
+### Phantom Read
+
+Repeated execution of a range query returns a different set of rows because another transaction inserted, deleted, or otherwise changed qualifying rows.
+
+---
+
+## 7.3 Locks
+
+### Shared Lock — S
+
+Used for reading.
+
+Multiple transactions may hold compatible shared locks simultaneously.
+
+### Exclusive Lock — X
+
+Used for writing.
+
+An exclusive lock conflicts with shared and exclusive locks held by other transactions.
+
+### Compatibility
+
+| Existing / Requested |   S |  X |
+| -------------------- | --: | -: |
+| S                    | Yes | No |
+| X                    |  No | No |
+
+---
+
+## 7.4 Two-Phase Locking — 2PL
+
+2PL divides a transaction into two phases.
+
+### Growing Phase
+
+* Locks may be acquired.
+* Locks are not released.
+
+### Shrinking Phase
+
+* Locks may be released.
+* New locks are not acquired under standard 2PL.
+
+2PL guarantees conflict serializability but does not by itself prevent deadlock.
+
+---
+
+## 7.5 Strict 2PL
+
+Exclusive locks are held until the transaction commits or aborts.
+
+This improves recoverability and prevents many cascading effects.
+
+---
+
+## 7.6 Rigorous 2PL
+
+Both shared and exclusive locks are held until commit or abort.
+
+Relationship:
+
+```text
+Rigorous 2PL
+      ↓
+ Strict 2PL
+      ↓
+      2PL
+```
+
+---
+
+## 7.7 Deadlock
+
+A deadlock occurs when transactions wait for one another in a cycle.
 
 Example:
 
-T1 writes A
-T2 reads A
-T1 aborts
+```text
+T1 waits for T2
+T2 waits for T1
+```
 
-T2 may also need rollback.
+---
 
-12.11 Cascadeless
+## 7.8 Wait-For Graph
 
-A transaction reads only values written by committed transactions.
+* Each transaction is a node.
+* `Ti → Tj` means `Ti` is waiting for `Tj`.
 
-12.12 Shadow Paging
+A cycle indicates deadlock.
 
-Uses:
+---
 
-Shadow page table
-Current page table
+## 7.9 Wait-Die
 
-Alternative recovery technique to traditional log-based recovery.
+Based on transaction timestamps:
 
-🔥 RECOVERY TRAPS
-WAL → log first, corresponding data page later.
-WAL doesn't mean data first.
-Deferred → generally REDO.
-Immediate → UNDO + REDO.
-UNDO → old value.
-REDO → new value.
-Checkpoint → reduces recovery work.
-Checkpoint doesn't eliminate recovery.
-Dirty read can cause cascading rollback.
-Cascadeless prevents reading uncommitted writes.
-Strict is stronger than cascadeless.
-Serializability ≠ recovery.
-Shadow paging uses shadow/current page tables.
+* Older transaction requests a lock held by younger transaction → older transaction waits.
+* Younger transaction requests a lock held by older transaction → younger transaction aborts.
 
+---
 
+## 7.10 Wound-Wait
 
+* Older transaction requests a lock held by younger transaction → younger transaction is aborted.
+* Younger transaction requests a lock held by older transaction → younger transaction waits.
 
+---
 
+## 7.11 Timestamp Ordering
 
+Each transaction receives a unique timestamp.
 
+Smaller timestamp generally means the transaction is older.
 
+The system maintains values such as:
 
+```text
+ReadTS(X)
+WriteTS(X)
+```
 
-13. STORAGE & FILE ORGANIZATION
-13.1 Storage Hierarchy
-Registers
- ↓
+Operations that violate the required timestamp order may cause a transaction to be rejected or restarted.
+
+Timestamp ordering avoids lock-wait deadlocks because transactions do not wait for locks in the same way as lock-based protocols.
+
+---
+
+# 8. INDEXING & HASHING
+
+## 8.1 Index
+
+An index is an auxiliary data structure that helps locate records efficiently.
+
+It maps search-key values to locations or pointers associated with records/pages.
+
+---
+
+## 8.2 Dense Index
+
+A dense index contains an index entry for every search-key value or record, depending on the indexing scheme.
+
+### Advantages
+
+* Faster direct lookup
+* More complete index information
+
+### Disadvantage
+
+* Requires more storage
+
+---
+
+## 8.3 Sparse Index
+
+A sparse index contains fewer entries.
+
+Sparse indexes generally require the underlying data to be ordered appropriately.
+
+---
+
+## 8.4 Primary Index
+
+An index associated with the ordering/primary search key of the data file.
+
+---
+
+## 8.5 Secondary Index
+
+An index built on a non-ordering attribute or another search key.
+
+---
+
+## 8.6 Multilevel Index
+
+An index can itself be indexed.
+
+This reduces the number of levels/pages that must be accessed during search.
+
+---
+
+## 8.7 B-Tree and B+ Tree
+
+B-tree family structures are balanced multiway search trees.
+
+### B+ Tree Structure
+
+A typical B+ tree contains:
+
+* Internal nodes containing search keys and child pointers
+* Leaf nodes containing search-key entries and pointers to data records/pages
+* Linked leaf nodes for ordered traversal
+
+### Advantages
+
+* Balanced height
+* Efficient search
+* Efficient insertion and deletion
+* Efficient range queries
+* Ordered traversal
+
+---
+
+## 8.8 B+ Tree Order
+
+For a B+ tree of order `m`, a common convention is:
+
+```text
+Maximum children = m
+Maximum keys in an internal node = m − 1
+```
+
+Minimum occupancy depends on the exact convention and implementation.
+
+---
+
+## 8.9 B+ Tree Search
+
+The search follows one path from the root toward a leaf.
+
+Approximate search complexity:
+
+```text
+O(logₘ N)
+```
+
+where `m` is the branching factor and `N` is the number of indexed entries.
+
+---
+
+## 8.10 B+ Tree Insertion
+
+Typical process:
+
+1. Locate the appropriate leaf.
+2. Insert the key.
+3. If overflow occurs, split the node.
+4. Propagate the appropriate separator information upward.
+5. A root split can increase tree height.
+
+---
+
+## 8.11 B+ Tree Deletion
+
+Typical process:
+
+1. Delete the key.
+2. Check for underflow.
+3. Redistribute from a suitable sibling when possible.
+4. Otherwise merge nodes.
+5. Adjust parent separator information.
+6. A root merge can reduce tree height.
+
+---
+
+## 8.12 Hashing
+
+Hashing maps a search key to a bucket using a hash function.
+
+A simple hash function is:
+
+```text
+h(K) = K mod m
+```
+
+when this function is specified.
+
+Example:
+
+```text
+K = 17
+m = 5
+
+h(17) = 17 mod 5 = 2
+```
+
+---
+
+## 8.13 Collision
+
+A collision occurs when two different keys map to the same bucket.
+
+### Collision Handling
+
+* Chaining
+* Overflow buckets
+* Open addressing, where applicable
+
+---
+
+## 8.14 B+ Tree vs Hash Index
+
+| Property          | B+ Tree                | Hash                    |
+| ----------------- | ---------------------- | ----------------------- |
+| Equality search   | Efficient              | Very efficient          |
+| Range search      | Efficient              | Generally poor          |
+| Ordered traversal | Supported              | Not naturally supported |
+| Structure         | Balanced tree          | Hash buckets            |
+| Typical use       | Range + ordered access | Equality lookup         |
+
+---
+
+# 9. RELATIONAL ALGEBRA
+
+## 9.1 Relational Algebra
+
+Relational algebra is a procedural query language for the relational model.
+
+It describes **how** to obtain a desired result.
+
+---
+
+## 9.2 Basic Operators
+
+### Selection — σ
+
+Selects rows satisfying a condition.
+
+```text
+σ Marks > 80 (Student)
+```
+
+Equivalent SQL idea:
+
+```sql
+SELECT *
+FROM Student
+WHERE Marks > 80;
+```
+
+---
+
+### Projection — π
+
+Selects required attributes.
+
+```text
+π Name, Marks (Student)
+```
+
+Equivalent SQL idea:
+
+```sql
+SELECT Name, Marks
+FROM Student;
+```
+
+Classical relational algebra treats relations as sets, so projection removes duplicate tuples.
+
+---
+
+### Union — ∪
+
+Combines tuples from two union-compatible relations.
+
+```text
+R ∪ S
+```
+
+---
+
+### Difference — −
+
+Returns tuples in the first relation but not in the second.
+
+```text
+R − S
+```
+
+Difference is directional.
+
+---
+
+### Cartesian Product — ×
+
+Combines every tuple of one relation with every tuple of another.
+
+If:
+
+```text
+|R| = m
+|S| = n
+```
+
+then:
+
+```text
+|R × S| = m × n
+```
+
+---
+
+### Rename — ρ
+
+Renames a relation or its attributes.
+
+Useful when the same relation is referenced more than once.
+
+---
+
+## 9.3 Joins
+
+A join combines related tuples from relations.
+
+### Theta Join
+
+Uses an explicit comparison condition.
+
+```text
+R ⋈condition S
+```
+
+### Natural Join
+
+Joins relations using common attributes and eliminates duplicate copies of common join attributes.
+
+---
+
+## 9.4 Division
+
+Division is useful for queries involving **“for all”** conditions.
+
+Conceptually:
+
+```text
+R ÷ S
+```
+
+returns values from `R` associated with every required value in `S`.
+
+---
+
+## 9.5 Relational Algebra and SQL
+
+| Relational Algebra | SQL                    |
+| ------------------ | ---------------------- |
+| σ                  | WHERE                  |
+| π                  | SELECT columns         |
+| ∪                  | UNION                  |
+| ∩                  | INTERSECT              |
+| −                  | EXCEPT                 |
+| ×                  | CROSS JOIN             |
+| ⋈                  | JOIN                   |
+| ρ                  | Alias / RENAME         |
+| ÷                  | For-all query patterns |
+
+---
+
+## 9.6 Selection Pushdown
+
+Selection operations can often be moved closer to the base relation.
+
+Instead of:
+
+```text
+Join → Select
+```
+
+a query optimizer may use:
+
+```text
+Select → Join
+```
+
+when logically valid.
+
+This reduces the number of tuples entering later operations.
+
+---
+
+# 10. QUERY PROCESSING & OPTIMIZATION
+
+## 10.1 Query Processing Flow
+
+```text
+SQL Query
+   ↓
+Parsing / Translation
+   ↓
+Logical Representation
+   ↓
+Query Optimization
+   ↓
+Physical Execution Plan
+   ↓
+Execution
+   ↓
+Result
+```
+
+---
+
+## 10.2 Parsing and Translation
+
+The DBMS checks:
+
+* SQL syntax
+* Table and column names
+* Data types
+* Semantic validity
+* Query structure
+
+The query is translated into an internal representation.
+
+---
+
+## 10.3 Query Optimization
+
+The optimizer searches for an efficient execution strategy among semantically equivalent alternatives.
+
+### Important Cost Factors
+
+* Disk I/O
+* CPU processing
+* Memory usage
+* Intermediate result size
+* Network cost in distributed systems
+
+Disk/page I/O is often a major cost factor in database systems.
+
+---
+
+## 10.4 Query Tree
+
+A query can be represented using a tree of relational operations.
+
+Example:
+
+```text
+        π Name
+           |
+      σ Marks > 80
+           |
+        STUDENT
+```
+
+---
+
+## 10.5 Selection Pushdown
+
+Apply filters as early as possible when logically valid.
+
+Example:
+
+```text
+Student JOIN Department
+        ↓
+   WHERE Marks > 80
+```
+
+can often be transformed into:
+
+```text
+σ Marks > 80(Student)
+        JOIN
+    Department
+```
+
+This can reduce intermediate results.
+
+---
+
+## 10.6 Projection Pushdown
+
+Remove unnecessary columns as early as possible when they are not needed by later operations.
+
+This reduces tuple width and intermediate storage requirements.
+
+---
+
+## 10.7 Join Algorithms
+
+### Nested-Loop Join
+
+For each tuple of one relation, tuples of the other relation are examined.
+
+It is general but can become expensive.
+
+### Indexed Nested-Loop Join
+
+Uses an index on the inner relation's join attribute to find matching rows efficiently.
+
+### Sort-Merge Join
+
+Relations are sorted on the join attribute and then merged.
+
+Useful when sorted data is already available or useful for later operations.
+
+### Hash Join
+
+Uses hashing to partition/build and probe matching tuples.
+
+Particularly useful for equality joins.
+
+---
+
+## 10.8 Materialization
+
+An intermediate result is fully computed and stored before the next operator consumes it.
+
+### Advantages
+
+* Intermediate result can be reused.
+* Operator execution can be separated.
+
+### Disadvantage
+
+* Requires additional storage and I/O.
+
+---
+
+## 10.9 Pipelining
+
+Tuples are passed directly from one operator to another without fully materializing the intermediate result.
+
+### Advantages
+
+* Reduces temporary storage
+* Can reduce I/O
+* Allows earlier result production
+
+---
+
+# 11. ENTITY-RELATIONSHIP MODEL
+
+## 11.1 Entity
+
+An entity is a distinguishable real-world object.
+
+Examples:
+
+* Student
+* Employee
+* Department
+* Course
+
+---
+
+## 11.2 Entity Set
+
+An entity set is a collection of similar entities.
+
+Example:
+
+```text
+STUDENT
+```
+
+may contain all student entities.
+
+---
+
+## 11.3 Attributes
+
+An attribute describes a property of an entity.
+
+### Simple Attribute
+
+Cannot be meaningfully divided into smaller components.
+
+Example:
+
+```text
+Gender
+```
+
+### Composite Attribute
+
+Can be divided into components.
+
+Example:
+
+```text
+Name
+├── FirstName
+├── MiddleName
+└── LastName
+```
+
+### Single-Valued Attribute
+
+One value per entity.
+
+### Multivalued Attribute
+
+Multiple values per entity.
+
+Example:
+
+```text
+PhoneNumbers
+```
+
+### Stored Attribute
+
+Directly stored.
+
+Example:
+
+```text
+DateOfBirth
+```
+
+### Derived Attribute
+
+Calculated from another attribute.
+
+Example:
+
+```text
+Age
+```
+
+derived from:
+
+```text
+DateOfBirth
+```
+
+### Key Attribute
+
+An attribute used to uniquely identify an entity.
+
+---
+
+## 11.4 Relationship
+
+A relationship represents an association between entity sets.
+
+Example:
+
+```text
+STUDENT ─── ENROLLS ─── COURSE
+```
+
+---
+
+## 11.5 Relationship Degree
+
+### Unary Relationship
+
+Involves one entity set.
+
+Example:
+
+```text
+Employee manages Employee
+```
+
+### Binary Relationship
+
+Involves two entity sets.
+
+Example:
+
+```text
+Student enrolls in Course
+```
+
+### Ternary Relationship
+
+Involves three entity sets.
+
+---
+
+## 11.6 Cardinality
+
+### One-to-One
+
+```text
+1 : 1
+```
+
+### One-to-Many
+
+```text
+1 : N
+```
+
+### Many-to-One
+
+```text
+N : 1
+```
+
+### Many-to-Many
+
+```text
+M : N
+```
+
+---
+
+## 11.7 Participation
+
+### Total Participation
+
+Every entity must participate in the relationship.
+
+### Partial Participation
+
+Participation is optional for some entities.
+
+---
+
+## 11.8 Weak Entity
+
+A weak entity cannot be uniquely identified by its own attributes alone.
+
+It depends on an owner/strong entity.
+
+Typical characteristics:
+
+* Does not have a complete key of its own
+* Has a partial key
+* Has total participation in the identifying relationship
+* Traditionally represented using a double rectangle
+* Identifying relationship traditionally represented using a double diamond
+
+---
+
+## 11.9 Relationship Attributes
+
+Some attributes belong to a relationship rather than an individual entity.
+
+Example:
+
+```text
+STUDENT ─── ENROLLS ─── COURSE
+                  |
+                Grade
+```
+
+`Grade` describes the enrollment relationship.
+
+---
+
+## 11.10 Specialization and Generalization
+
+### Specialization
+
+Top-down approach.
+
+A general entity is divided into more specific subclasses.
+
+Example:
+
+```text
+Employee
+   ├── Faculty
+   └── Staff
+```
+
+### Generalization
+
+Bottom-up approach.
+
+Common characteristics of multiple entities are combined into a generalized entity.
+
+---
+
+## 11.11 Disjoint and Overlapping Constraints
+
+### Disjoint
+
+An entity can belong to at most one subclass.
+
+### Overlapping
+
+An entity may belong to multiple subclasses.
+
+---
+
+## 11.12 Total and Partial Specialization
+
+### Total Specialization
+
+Every superclass entity must belong to a subclass.
+
+### Partial Specialization
+
+Some superclass entities may belong to no subclass.
+
+---
+
+## 11.13 ER to Relational Mapping
+
+### Strong Entity
+
+Map to a relation.
+
+```text
+EMPLOYEE(EmployeeID, Name, Salary)
+```
+
+### Composite Attribute
+
+Store its component attributes.
+
+```text
+Name → FirstName, LastName
+```
+
+### Multivalued Attribute
+
+Create a separate relation.
+
+```text
+EmployeePhone(EmployeeID, Phone)
+```
+
+### 1:N Relationship
+
+Place the primary key of the 1-side as a foreign key in the N-side.
+
+```text
+DEPARTMENT(DeptID, DeptName)
+
+EMPLOYEE(EmployeeID, Name, DeptID)
+```
+
+### M:N Relationship
+
+Create a separate relation.
+
+```text
+ENROLLMENT(StudentID, CourseID, Grade)
+```
+
+The relation contains the keys of participating entities and any relationship attributes.
+
+---
+
+# 12. DATABASE RECOVERY
+
+## 12.1 Purpose of Recovery
+
+Database recovery restores the database to a correct and consistent state after failures.
+
+---
+
+## 12.2 Types of Failures
+
+### Transaction Failure
+
+A transaction cannot complete successfully.
+
+Possible causes include:
+
+* Constraint violation
+* Logical error
+* Explicit rollback
+
+### System Failure
+
+A crash or power failure causes loss of volatile state.
+
+### Media Failure
+
+Storage media is damaged or data becomes inaccessible.
+
+---
+
+## 12.3 Log-Based Recovery
+
+A log records transaction activity.
+
+Example:
+
+```text
+<T1 START>
+<T1, A, old_value, new_value>
+<T1 COMMIT>
+```
+
+The exact format depends on the recovery system.
+
+---
+
+## 12.4 Write-Ahead Logging — WAL
+
+The write-ahead logging principle requires the necessary log record to reach stable storage before the corresponding modified database page is written to stable storage.
+
+This allows recovery information to be available before the database page itself is persisted.
+
+---
+
+## 12.5 UNDO
+
+UNDO restores the previous value.
+
+Example:
+
+```text
+Old value = 500
+New value = 300
+```
+
+UNDO restores:
+
+```text
+500
+```
+
+---
+
+## 12.6 REDO
+
+REDO reapplies a committed change.
+
+Example:
+
+```text
+Old value = 500
+New value = 300
+```
+
+REDO ensures the intended new value:
+
+```text
+300
+```
+
+is reflected after recovery.
+
+---
+
+## 12.7 Deferred Update
+
+Database changes are delayed until transaction commit under the basic deferred-update model.
+
+Recovery generally requires **REDO** for committed transactions because uncommitted changes have not been applied to the database.
+
+---
+
+## 12.8 Immediate Update
+
+Database changes may be written before transaction commit.
+
+Therefore recovery may require:
+
+```text
+UNDO + REDO
+```
+
+depending on the recovery protocol.
+
+---
+
+## 12.9 Checkpoint
+
+A checkpoint records a recovery point and reduces the amount of log that normally needs to be examined during recovery.
+
+A checkpoint reduces recovery work but does not eliminate the need for recovery.
+
+---
+
+## 12.10 Cascading Rollback
+
+A cascading rollback occurs when a transaction must be rolled back because it depended on data written by another transaction that subsequently failed.
+
+This can occur when transactions read uncommitted data.
+
+Cascadeless execution prevents transactions from reading uncommitted writes.
+
+---
+
+## 12.11 Shadow Paging
+
+Shadow paging maintains:
+
+* A shadow page table
+* A current page table
+
+The shadow structure provides a stable reference to the previous database state while updates are made through the current structure.
+
+---
+
+# 13. STORAGE & FILE ORGANIZATION
+
+## 13.1 Storage Hierarchy
+
+A simplified storage hierarchy is:
+
+```text
+CPU Registers
+     ↓
 Cache
- ↓
-RAM
- ↓
-SSD/Disk
+     ↓
+Main Memory / RAM
+     ↓
+SSD / Disk
+```
 
-Database data is commonly transferred between storage and memory in pages/blocks.
+Higher levels generally provide faster access but have smaller capacity.
 
-13.2 Page / Block
+---
 
-Basic unit of disk-memory transfer.
+## 13.2 Pages and Blocks
+
+A DBMS commonly transfers data between secondary storage and memory in units such as:
+
+* Pages
+* Blocks
+
+Database operations are therefore heavily influenced by the number of page/block transfers required.
+
+---
+
+## 13.3 Record
+
+A record is the storage representation of a tuple/row.
 
 Example:
 
-Page
- ├── Header
- ├── Records
- └── Free Space
-13.3 Record
+```text
+101 | Rahul | 85 | CSE
+```
 
-One tuple/row.
+---
 
-13.4 Fixed-Length Record
+## 13.4 Fixed-Length Records
 
-All records same size.
+All records have the same size.
 
-Formula:
+### Advantages
 
-$$ \boxed{ Records/Page= \left\lfloor \frac{Usable\ Page\ Size}{Record\ Size} \right\rfloor } $$
-13.5 Variable-Length Record
+* Simple storage management
+* Easy address calculation
+* Fast access
 
-Records can have different lengths.
+---
 
-Often requires:
+## 13.5 Variable-Length Records
 
-Offsets
-Lengths
-Slot directory
-13.6 Slotted Page ⭐⭐⭐⭐⭐
+Records can have different sizes.
 
-Common structure:
+They may require:
 
-┌──────────────────┐
-│ Page Header      │
-├──────────────────┤
-│ Record 1         │
-│ Record 2         │
-│ Record 3         │
-│                  │
-│ Free Space       │
-├──────────────────┤
-│ Slot Directory   │
-└──────────────────┘
+* Length information
+* Offset information
+* Slot directories
+* Additional record-management metadata
 
-Useful for variable-length records.
+---
 
-13.7 Spanned vs Unspanned
-Spanned
+## 13.6 Slotted Page
 
-Record can cross page boundaries.
+A slotted page is a page organization commonly used for variable-length records.
 
-Unspanned
+A simplified structure:
 
-Record must stay within one page.
+```text
++----------------------+
+| Page Header          |
++----------------------+
+| Record Data          |
+| Record Data          |
+|                      |
+| Free Space           |
+|                      |
++----------------------+
+| Slot Directory       |
++----------------------+
+```
 
-Spanned   → Can cross
-Unspanned → Cannot cross
-13.8 Heap Organization
+The slot directory helps locate records within the page.
 
-Records unordered.
+---
 
-Good for:
-Insertion
-Bad for:
+## 13.7 Spanned Records
 
-Searching without an index.
+A record is **spanned** when it is allowed to cross a page boundary.
 
-13.9 Sequential / Ordered
+Example:
 
-Records stored according to ordering key.
+```text
+Page 1: [part of record]
+Page 2: [remaining part]
+```
 
-Good for:
-Sequential processing
-Ordered access
-Range queries
-13.10 Hash Organization
-$$ h(K)=K\bmod m $$
+---
 
-Good for equality.
+## 13.8 Unspanned Records
 
-Poor for range.
+A record must fit entirely within one page.
 
-13.11 Buffer Manager
+---
 
-Manages pages between storage and RAM.
+## 13.9 File Organization
 
-Responsibilities:
+### Heap File
 
-Fetch pages
-Manage buffer frames
-Replace pages
-Write modified pages back
-13.12 Buffer Hit
+Records are stored without a specific ordering.
 
-Page already in buffer.
+Advantages:
 
-No disk read required.
+* Simple
+* Efficient insertion
 
-Buffer Miss
+Searching may require scanning many records.
 
-Page not present.
+---
 
-Requires fetching from storage.
+### Sequential / Ordered File
 
-13.13 Dirty Page
+Records are maintained in a specified order.
 
-Page modified in memory compared with its stored version.
+Advantages:
 
-13.14 Blocking Factor ⭐⭐⭐⭐⭐
+* Efficient sequential access
+* Useful for ordered/range processing
 
-If:
+Insertions may require additional work.
 
-Block size = B
-Record size = R
+---
 
-then:
+### Hash File
 
-$$ \boxed{ bfr=\left\lfloor\frac{B}{R}\right\rfloor } $$
-13.15 Number of Blocks
+Records are organized using a hash function.
 
-If:
+Advantages:
 
-Number of records = r
-Blocking factor = bfr
+* Efficient equality search
 
-then:
+Generally unsuitable for ordered range access.
 
-$$ \boxed{ b=\left\lceil\frac{r}{bfr}\right\rceil } $$
-🔥 Critical shortcut
-Records per block → FLOOR
-Number of blocks → CEILING
-Example
+---
 
-Block = 1000 bytes.
+### Clustered Organization
 
-Record = 120 bytes.
+Related records are stored physically close together to improve locality for related access patterns.
 
-$$ bfr=\lfloor1000/120\rfloor=8 $$
+---
 
-For 950 records:
+## 13.10 Buffer Manager
 
-$$ blocks=\lceil950/8\rceil=119 $$
-🔥🔥 MASTER TRAP SHEET — LAST-MINUTE REVISION
+The buffer manager manages database pages between disk/storage and main memory.
 
-If you're short on time, memorize this section first.
+Responsibilities include:
 
-Fundamentals
-Degree → Columns
-Cardinality → Rows
+* Fetching pages
+* Managing memory frames
+* Tracking page usage
+* Selecting pages for replacement
+* Writing modified pages back to storage
 
-Schema → Structure
-Instance → Current data
+---
 
-Physical DI → Internal level
-Logical DI → Conceptual level
-Keys
-Candidate → Minimal superkey
-Primary → Selected candidate key
-Entity integrity → PK not NULL
-Referential integrity → Valid FK reference
-FD
-X+ → Attributes determined by X
+## 13.11 Buffer Hit and Buffer Miss
 
-Candidate key:
-Closure = all attributes
-+
-Minimality
-SQL
-WHERE → Rows
-HAVING → Groups
+### Buffer Hit
 
-COUNT(*) → Rows
-COUNT(col) → Non-NULL
-COUNT(DISTINCT col) → Unique non-NULL
+Requested page is already present in memory.
 
-ANY → At least one
-ALL → Every
-EXISTS → At least one row
+No storage read is required.
 
-=NULL ❌
-IS NULL ✅
+### Buffer Miss
 
-UNION → Remove duplicates
-UNION ALL → Keep duplicates
+Requested page is not present in memory.
 
-NOT IN + NULL → Dangerous
-Normalization
-1NF → Atomic
-2NF → No partial dependency
-3NF → Superkey OR prime RHS
-BCNF → Determinant must be superkey
+The DBMS must fetch it from storage.
 
-BCNF ⊂ 3NF in strength
-Transactions
-RR → No conflict
-RW → Conflict
-WR → Conflict
-WW → Conflict
+---
 
-Cycle → Not conflict serializable
-Acyclic → Conflict serializable
+## 13.12 Dirty Page
 
-Strict → Cascadeless → Recoverable
-Concurrency
-S-S → Compatible
-S-X → Not
-X-X → Not
+A dirty page is a buffer page that has been modified in memory but whose latest contents have not yet been written to the corresponding stable-storage location.
 
-2PL → Growing + Shrinking
+---
 
-Wait-Die:
-Older waits
-Younger dies
+## 13.13 Blocking Factor
 
-Wound-Wait:
-Older wounds
-Younger waits
-Indexing
-B+ Tree → Range
-Hash → Equality
+The blocking factor represents the number of records that fit in one block.
 
-Sparse → Ordered file generally required
+For fixed-length records:
 
-Order m:
-Max children = m
-Max keys = m−1
+```text
+bfr = floor(Block Size / Record Size)
+```
 
-Overflow → Split
-Underflow → Redistribute/Merge
-Relational Algebra
-σ → Rows
-π → Columns
+### Example
 
-R−S ≠ S−R
+Given:
 
-R×S → |R|×|S|
+```text
+Block size = 1000 bytes
+Record size = 120 bytes
+```
 
-Division → FOR ALL
-Query Processing
-Selection Pushdown → Fewer tuples
-Projection Pushdown → Fewer attributes
+Then:
 
-Hash Join → Equality
-Sort-Merge → Sorted/Merge
-Nested Loop → General
+```text
+bfr = floor(1000 / 120)
+    = floor(8.333...)
+    = 8 records/block
+```
 
-Optimizer:
-Same result + lower cost
-ER
-Cardinality → How many?
-Participation → Mandatory/Optional
+---
 
-Weak Entity → No complete key
+## 13.14 Number of Blocks
 
-Specialization → Top-down
-Generalization → Bottom-up
+If there are `r` records and the blocking factor is `bfr`:
 
-1:N → FK on N-side
-M:N → Separate relation
-Recovery
-WAL → Log before data page
+```text
+Number of blocks = ceil(r / bfr)
+```
 
-UNDO → Old value
-REDO → New value
+### Example
 
-Deferred → REDO
-Immediate → UNDO + REDO
+```text
+Records = 950
+bfr = 8
+```
 
-Checkpoint → Less recovery work
-Storage
-Spanned → Can cross page
-Unspanned → Cannot cross
+Therefore:
 
-Heap → Insert
-Sequential → Range/order
-Hash → Equality
+```text
+Blocks = ceil(950 / 8)
+       = ceil(118.75)
+       = 119
+```
 
-Buffer hit → Already in RAM
+---
 
-bfr = floor(Block/Record)
+# QUICK REFERENCE
 
-Blocks = ceil(Records/bfr)
-🎯 MOST IMPORTANT NUMERICAL FORMULAS
-Attribute Closure
+## Core DBMS Relationships
 
-No fixed formula:
+```text
+Database
+   ↓
+DBMS
+   ↓
+Data Management
+   ├── Storage
+   ├── Query Processing
+   ├── Transactions
+   ├── Concurrency Control
+   ├── Security
+   └── Recovery
+```
 
-Start X
-↓
-Apply FDs repeatedly
-↓
-X+
+## Architecture
 
-If:
+```text
+External
+   ↓
+Conceptual
+   ↓
+Internal
+   ↓
+Physical Storage
+```
 
-$$ X^+=R $$
+## Normalization
 
-then X is a superkey.
+```text
+1NF
+ ↓
+2NF
+ ↓
+3NF
+ ↓
+BCNF
+```
 
-Check minimality for candidate key.
+BCNF is stricter than 3NF.
 
-Cartesian Product
-$$ \boxed{|R\times S|=|R||S|} $$
-B+ Tree
+## Transaction Properties
 
-For order \(m\):
+```text
+Atomicity
+Consistency
+Isolation
+Durability
+```
 
-$$ \boxed{\text{Max children}=m} $$ $$ \boxed{\text{Max keys}=m-1} $$
-Blocking Factor
-$$ \boxed{ bfr=\left\lfloor\frac{B}{R}\right\rfloor } $$
-Number of Blocks
-$$ \boxed{ b=\left\lceil\frac{r}{bfr}\right\rceil } $$
-Hash
-$$ \boxed{h(K)=K\bmod m} $$
+## Transaction Control
 
-when modulo hashing is specified.
+```text
+START TRANSACTION
+      ↓
+Operations
+      ↓
+SAVEPOINT (optional)
+      ↓
+COMMIT
+      or
+ROLLBACK
+```
+
+## Lock Compatibility
+
+```text
+S + S → Compatible
+S + X → Incompatible
+X + S → Incompatible
+X + X → Incompatible
+```
+
+## Serializability
+
+```text
+Schedule
+   ↓
+Conflict Analysis
+   ↓
+Precedence Graph
+   ↓
+Acyclic → Conflict Serializable
+Cyclic   → Not Conflict Serializable
+```
+
+## Index Selection
+
+```text
+Equality Search → Hash is often suitable
+Range Search    → B+ Tree is often suitable
+Ordered Access → B+ Tree is suitable
+```
+
+## Recovery
+
+```text
+Failure
+  ↓
+Log / Recovery Information
+  ↓
+UNDO / REDO
+  ↓
+Consistent Database State
+```
+
+## Storage
+
+```text
+Record
+   ↓
+Page / Block
+   ↓
+File
+   ↓
+Database
+```
+
+## Important Formulas
+
+### Blocking Factor
+
+```text
+bfr = floor(Block Size / Record Size)
+```
+
+### Number of Blocks
+
+```text
+Blocks = ceil(Number of Records / bfr)
+```
+
+### Cartesian Product
+
+```text
+|R × S| = |R| × |S|
+```
+
+### Simple Hash Function
+
+```text
+h(K) = K mod m
+```
+
+when this hash function is specified.
+
+---
+
+# CONCEPTUAL CONNECTIONS
+
+A DBMS can be understood as a collection of interconnected layers:
+
+```text
+User / Application
+        ↓
+       SQL
+        ↓
+Query Parser & Translator
+        ↓
+Query Optimizer
+        ↓
+Execution Engine
+        ↓
+Transaction Manager
+        ↓
+Concurrency Control
+        ↓
+Buffer Manager
+        ↓
+Storage / File Manager
+        ↓
+Pages / Records / Indexes
+        ↓
+Physical Storage
+```
+
+A typical write operation can therefore be viewed as:
+
+```text
+SQL INSERT / UPDATE
+        ↓
+Transaction
+        ↓
+Concurrency Control
+        ↓
+Execution
+        ↓
+Buffer Manager
+        ↓
+Page Modification
+        ↓
+Logging / WAL
+        ↓
+Stable Storage
+```
+
+A typical read operation can be viewed as:
+
+```text
+SQL SELECT
+    ↓
+Parser
+    ↓
+Optimizer
+    ↓
+Execution Plan
+    ↓
+Index / File Access
+    ↓
+Buffer Manager
+    ↓
+Pages
+    ↓
+Records
+    ↓
+Result
+```
+
+These components work together to provide efficient, reliable, consistent, and recoverable data management.
