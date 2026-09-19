@@ -90,3 +90,97 @@ Physical DI → internal-level changes.
 Logical DI → conceptual-level changes.
 Instance changes frequently.
 DBA handles authorization, backup and recovery.
+
+
+
+
+
+
+
+
+
+2. RELATIONAL MODEL, KEYS & CONSTRAINTS
+2.1 Basic Terms
+Term	Meaning
+Relation	Table
+Tuple	Row
+Attribute	Column
+Domain	Allowed set of values
+Degree	Number of attributes
+Cardinality	Number of tuples
+🔥 Shortcut
+Degree → Columns
+Cardinality → Rows
+2.2 Keys
+Super Key
+
+Any set of attributes that uniquely identifies a tuple.
+
+It may contain unnecessary attributes.
+
+Candidate Key
+
+A minimal super key.
+
+Primary Key
+
+Candidate key selected as the main key.
+
+Only one primary key constraint is selected for a relation, though it can contain multiple attributes.
+
+Alternate Key
+
+Candidate key not selected as primary key.
+
+Foreign Key
+
+Attribute(s) referencing a candidate/primary key of another relation.
+
+Composite Key
+
+Key consisting of more than one attribute.
+
+2.3 Example
+
+Suppose:
+
+STUDENT(RollNo, Email, Name, Phone)
+
+If both RollNo and Email uniquely identify students:
+
+Candidate keys:
+RollNo
+Email
+
+If RollNo is selected:
+
+Primary key = RollNo
+Alternate key = Email
+2.4 Integrity Constraints
+Domain Integrity
+
+Values must belong to the valid domain.
+
+Entity Integrity
+
+Primary key cannot be NULL.
+
+Referential Integrity
+
+Foreign key must reference a valid key value, subject to the allowed NULL/action rules.
+
+Key Constraint
+
+Key values must uniquely identify tuples.
+
+🔥 Key Traps
+Every candidate key is a super key.
+Every super key is not necessarily a candidate key.
+Candidate key = minimal super key.
+Primary key = selected candidate key.
+Multiple candidate keys can exist.
+Entity integrity → PK cannot be NULL.
+Referential integrity → FK references a valid key.
+FK may contain NULL unless restricted by NOT NULL.
+Degree → columns.
+Cardinality → rows.
