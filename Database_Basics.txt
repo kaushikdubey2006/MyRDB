@@ -742,3 +742,140 @@ BCNF stronger than 3NF.
 3NF can be not BCNF.
 Need candidate keys before deciding normal form.
 Lossless and dependency preservation are different properties.
+
+
+
+
+
+
+
+
+6. TRANSACTIONS & SERIALIZABILITY
+6.1 Transaction
+
+A transaction is a logical unit of database operations.
+
+6.2 ACID ⭐⭐⭐⭐⭐
+Atomicity
+
+All operations or none.
+
+Consistency
+
+Valid database state → valid database state.
+
+Isolation
+
+Concurrent transactions behave appropriately, ideally as if executed serially according to the chosen isolation/serializability guarantees.
+
+Durability
+
+Committed effects survive failures.
+
+6.3 Transaction States
+Active
+ ↓
+Partially Committed
+ ↓
+Committed
+
+Failure:
+
+Active
+ ↓
+Failed
+ ↓
+Aborted
+6.4 Schedule
+
+A schedule is an ordering/interleaving of operations from transactions that preserves each transaction's internal order.
+
+Serial Schedule
+
+Transactions execute one after another.
+
+Non-Serial
+
+Operations are interleaved.
+
+Important
+Non-serial ≠ Non-serializable
+
+A nonserial schedule can still be serializable.
+
+6.5 Conflicting Operations ⭐⭐⭐⭐⭐
+
+Two operations conflict if:
+
+They belong to different transactions.
+They operate on the same data item.
+At least one is a write.
+
+Therefore:
+
+RR → No conflict
+RW → Conflict
+WR → Conflict
+WW → Conflict
+6.6 Precedence Graph
+
+Create:
+
+One node per transaction
+
+Add:
+
+$$ T_i\rightarrow T_j $$
+
+if a conflicting operation of Ti occurs before Tj.
+
+Result:
+Acyclic graph
+→ Conflict serializable
+
+Cycle
+→ NOT conflict serializable
+6.7 Serial Order
+
+If graph is acyclic, perform topological ordering.
+
+The topological order gives an equivalent serial order.
+
+6.8 Recoverable Schedule
+
+If Tj reads data written by Ti:
+
+$$ Ti \text{ must commit before } Tj $$
+6.9 Cascadeless
+
+Transactions read only values written by committed transactions.
+
+6.10 Strict
+
+If Ti writes X, no other transaction can read/write X until Ti commits or aborts.
+
+Relationship:
+
+$$ \boxed{Strict\Rightarrow Cascadeless\Rightarrow Recoverable} $$
+6.11 View Serializability
+
+Conflict serializability is more restrictive.
+
+$$ Conflict\ Serializable \Rightarrow View\ Serializable $$
+
+Reverse is not necessarily true.
+
+🔥 TRANSACTION TRAPS
+Serial schedule → conflict serializable.
+Nonserial doesn't mean nonserializable.
+RR → no conflict.
+RW/WR/WW → conflict.
+Same data item is required.
+Cycle → not conflict serializable.
+Acyclic → conflict serializable.
+Topological order → serial order.
+Recoverable → commit dependency.
+Cascadeless → read only committed writes.
+Strict → prevents reads/writes of uncommitted written item.
+Strict ⇒ Cascadeless ⇒ Recoverable.
+Conflict serializable ⇒ View serializable.
