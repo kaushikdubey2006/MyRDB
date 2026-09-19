@@ -184,3 +184,417 @@ Referential integrity → FK references a valid key.
 FK may contain NULL unless restricted by NOT NULL.
 Degree → columns.
 Cardinality → rows.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. FUNCTIONAL DEPENDENCIES & ATTRIBUTE CLOSURE
+3.1 Functional Dependency
+
+An FD:
+
+$$ X\rightarrow Y $$
+
+means:
+
+If two tuples have the same X value, they must have the same Y value.
+
+X = determinant.
+
+3.2 Types
+Trivial FD
+$$ X\rightarrow Y $$
+
+where:
+
+$$ Y\subseteq X $$
+
+Example:
+
+$$ AB\rightarrow A $$
+Non-trivial FD
+$$ Y\nsubseteq X $$
+Completely Non-trivial
+$$ X\cap Y=\emptyset $$
+3.3 Armstrong's Axioms ⭐⭐⭐⭐⭐
+Reflexivity
+
+If:
+
+$$ Y\subseteq X $$
+
+then:
+
+$$ X\rightarrow Y $$
+Augmentation
+
+If:
+
+$$ X\rightarrow Y $$
+
+then:
+
+$$ XZ\rightarrow YZ $$
+Transitivity
+
+If:
+
+$$ X\rightarrow Y $$
+
+and
+
+$$ Y\rightarrow Z $$
+
+then:
+
+$$ X\rightarrow Z $$
+Derived Rules
+Union
+$$ X\rightarrow Y,\ X\rightarrow Z $$
+
+then:
+
+$$ X\rightarrow YZ $$
+Decomposition
+$$ X\rightarrow YZ $$
+
+then:
+
+$$ X\rightarrow Y $$
+
+and:
+
+$$ X\rightarrow Z $$
+Pseudotransitivity
+
+If:
+
+$$ X\rightarrow Y $$
+
+and:
+
+$$ WY\rightarrow Z $$
+
+then:
+
+$$ WX\rightarrow Z $$
+3.4 Attribute Closure ⭐⭐⭐⭐⭐
+
+\(X^+\) = all attributes functionally determined by X.
+
+Candidate-key method
+Find attributes that don't appear on RHS.
+They must be included in every candidate key.
+Compute closure.
+If closure contains all attributes → super key.
+Check minimality → candidate key.
+Example
+$$ R(A,B,C,D,E) $$
+
+FDs:
+
+$$ A\rightarrow B $$ $$ B\rightarrow C $$ $$ CD\rightarrow E $$
+
+Consider:
+
+$$ AD^+ $$
+
+Start:
+
+AD
+
+A→B:
+
+ABD
+
+B→C:
+
+ABCD
+
+CD→E:
+
+ABCDE
+
+Therefore:
+
+$$ AD^+=ABCDE $$
+
+So AD is a super key.
+
+If minimal:
+
+$$ \boxed{AD=\text{Candidate Key}} $$
+🔥 FD Traps
+A→B does NOT imply B→A.
+Determinant is not automatically a candidate key.
+Closure must cover all attributes.
+Candidate key must be minimal.
+Attributes not appearing on RHS must be included in every candidate key under the standard setup.
+Candidate key → super key.
+Super key → not necessarily candidate key.
+4. SQL
+4.1 SQL Categories
+Category	Commands
+DDL	CREATE, ALTER, DROP, TRUNCATE
+DML	INSERT, UPDATE, DELETE
+DQL	SELECT
+DCL	GRANT, REVOKE
+TCL	COMMIT, ROLLBACK, SAVEPOINT
+
+Classification of some commands can vary slightly by textbook/DBMS, so focus on their actual behavior.
+
+4.2 DELETE vs TRUNCATE vs DROP
+DELETE
+DELETE FROM Student
+WHERE RollNo = 10;
+Removes rows.
+Can use WHERE.
+Table remains.
+TRUNCATE
+TRUNCATE TABLE Student;
+Removes all rows.
+No WHERE.
+Table structure remains.
+DROP
+DROP TABLE Student;
+Removes table structure and its data.
+🔥 Shortcut
+DELETE → selected rows
+TRUNCATE → all rows
+DROP → table itself
+4.3 SELECT
+SELECT Name, Marks
+FROM Student
+WHERE Marks > 80;
+4.4 DISTINCT
+SELECT DISTINCT Dept
+FROM Student;
+
+Removes duplicate result rows.
+
+Trap
+
+With multiple selected columns:
+
+SELECT DISTINCT Dept, Year
+
+uniqueness is considered for the combination of Dept and Year.
+
+4.5 Aggregate Functions
+COUNT
+SUM
+AVG
+MIN
+MAX
+COUNT(*)
+
+Counts rows.
+
+COUNT(column)
+
+Ignores NULL values.
+
+COUNT(DISTINCT column)
+
+Counts unique non-NULL values.
+
+🔥 Trap
+COUNT(*) → rows
+COUNT(col) → non-NULL col values
+COUNT(DISTINCT col) → unique non-NULL values
+4.6 WHERE vs HAVING ⭐⭐⭐⭐⭐
+WHERE
+
+Filters individual rows before grouping.
+
+HAVING
+
+Filters groups after grouping.
+
+Example:
+
+SELECT Dept, AVG(Marks)
+FROM Student
+GROUP BY Dept
+HAVING AVG(Marks) > 70;
+Shortcut
+WHERE → Rows
+HAVING → Groups
+4.7 SQL Logical Processing Order
+
+Conceptually:
+
+FROM
+ ↓
+WHERE
+ ↓
+GROUP BY
+ ↓
+HAVING
+ ↓
+SELECT
+ ↓
+DISTINCT
+ ↓
+ORDER BY
+4.8 Joins
+INNER JOIN
+
+Only matching rows.
+
+LEFT JOIN
+
+All rows from left + matching right rows.
+
+RIGHT JOIN
+
+All rows from right + matching left rows.
+
+FULL OUTER JOIN
+
+All rows from both sides.
+
+SELF JOIN
+
+A table joined with itself, usually using aliases.
+
+4.9 Join Duplication Trap ⭐⭐⭐⭐⭐
+
+Suppose:
+
+Department 1 → Many Employees
+
+Joining can produce multiple rows for the department.
+
+Therefore:
+
+COUNT(*)
+
+may count joined rows rather than distinct entities.
+
+Sometimes:
+
+COUNT(DISTINCT EmployeeID)
+
+is required.
+
+4.10 Subqueries
+IN
+
+Tests membership.
+
+EXISTS
+
+True if subquery returns at least one row.
+
+NOT EXISTS
+
+True when no matching row exists.
+
+ANY
+
+Condition true for at least one value.
+
+ALL
+
+Condition must be true for every value.
+
+Correlated Subquery
+
+Subquery depends on the current row of the outer query.
+
+4.11 NULL & Three-Valued Logic ⭐⭐⭐⭐⭐
+
+SQL uses:
+
+TRUE
+FALSE
+UNKNOWN
+Wrong
+WHERE Age = NULL
+Correct
+WHERE Age IS NULL
+
+NULL comparisons generally produce UNKNOWN.
+
+Important logic
+FALSE AND UNKNOWN = FALSE
+TRUE OR UNKNOWN = TRUE
+4.12 NOT IN + NULL Trap ⭐⭐⭐⭐⭐
+
+NOT IN can behave unexpectedly if the subquery/result contains NULL.
+
+Why?
+
+Because comparison can become UNKNOWN.
+
+Safer alternative in many cases:
+
+NOT EXISTS
+4.13 Set Operations
+UNION
+
+Removes duplicates.
+
+UNION ALL
+
+Keeps duplicates.
+
+INTERSECT
+
+Common rows.
+
+EXCEPT
+
+Rows in first result but not second.
+
+Set operands must be union-compatible.
+
+4.14 CASE
+
+Conditions are checked in order.
+
+CASE
+    WHEN Marks >= 90 THEN 'A'
+    WHEN Marks >= 80 THEN 'B'
+    ELSE 'C'
+END
+
+First matching condition is used.
+
+🔥 SQL TRAPS
+COUNT(*) counts rows.
+COUNT(column) ignores NULL.
+COUNT(DISTINCT column) ignores NULL.
+WHERE → rows.
+HAVING → groups.
+INNER → matches.
+LEFT → all left.
+RIGHT → all right.
+FULL → all both.
+ANY → at least one.
+ALL → every.
+EXISTS → at least one matching row.
+= NULL ❌.
+IS NULL ✅.
+NOT IN + NULL can produce unexpected results.
+UNION removes duplicates.
+UNION ALL keeps duplicates.
+Correlated subquery depends on outer row.
+JOIN can multiply rows.
+SQL has three-valued logic.
+DISTINCT applies to the selected combination.
+CASE conditions are evaluated in order.
+SQL logical order starts with FROM, not SELECT.
