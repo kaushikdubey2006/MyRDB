@@ -1014,3 +1014,163 @@ Wait-Die → older waits, younger dies.
 Wound-Wait → older wounds, younger waits.
 Smaller timestamp → older.
 Timestamp ordering avoids lock-wait deadlocks.
+
+
+
+
+
+
+
+
+
+8. INDEXING
+8.1 Index
+
+An index maps a search key to locations/pointers for finding records more efficiently.
+
+8.2 Dense Index
+
+Has an index entry for every search-key value/record according to the indexing scheme.
+
+Advantage
+
+Fast lookup.
+
+Disadvantage
+
+More space.
+
+8.3 Sparse Index
+
+Contains fewer entries.
+
+Generally requires ordered data.
+
+🔥 Trap
+
+Sparse indexes generally require the data file to be ordered on the search key.
+
+8.4 Primary vs Secondary Index
+Primary Index
+
+Typically associated with the ordering/primary search key.
+
+Secondary Index
+
+Built on a non-ordering attribute.
+
+8.5 Multilevel Index
+
+Index built on top of another index.
+
+Top Index
+   ↓
+Index
+   ↓
+Data
+
+Reduces search cost.
+
+8.6 B-Tree / B+ Tree
+
+Balanced multiway trees.
+
+8.7 B+ Tree ⭐⭐⭐⭐⭐
+
+Important properties:
+
+Internal nodes contain search keys and child pointers.
+Actual data-record pointers are at leaf level in the common DBMS representation.
+Leaf nodes are linked.
+Balanced tree.
+Good for range queries.
+8.8 B+ Tree Order
+
+For order \(m\):
+
+$$ \boxed{\text{Maximum children}=m} $$
+
+and:
+
+$$ \boxed{\text{Maximum keys}=m-1} $$
+
+Minimum occupancy depends on the exact convention/question.
+
+Root is a special case.
+8.9 B+ Tree Search
+
+Height is logarithmic.
+
+Roughly:
+
+$$ O(\log_m N) $$
+8.10 B+ Tree Insertion
+
+If node overflows:
+
+Overflow
+ ↓
+Split
+ ↓
+Propagate separator
+
+Root split can increase tree height.
+
+8.11 Deletion
+
+If underflow occurs:
+
+Redistribute
+or
+Merge
+
+Root merge can reduce height.
+
+8.12 Hashing
+
+Hash function maps key to bucket.
+
+Example:
+
+$$ h(K)=K\bmod m $$
+
+If:
+
+$$ K=17,\ m=5 $$
+
+then:
+
+$$ h(17)=2 $$
+8.13 Collision
+
+Different keys map to the same bucket.
+
+Collision handling includes:
+
+Chaining
+Overflow buckets
+Open addressing in suitable hashing structures
+8.14 B+ Tree vs Hash
+B+ Tree	Hash
+Ordered	Not inherently ordered
+Range queries good	Range queries poor
+Equality good	Equality excellent
+Supports sorted traversal	No natural sorted traversal
+🔥 Shortcut
+B+ Tree → Range
+Hash → Equality
+🔥 INDEXING TRAPS
+Dense → many index entries.
+Sparse → fewer entries.
+Sparse generally requires ordered data.
+B+ tree data pointers → leaves.
+B+ tree leaves linked.
+Order m → max m children.
+Max keys → m−1.
+Root has special occupancy rules.
+Overflow → split.
+Root split → height may increase.
+Underflow → redistribution/merge.
+Hash collision → different keys same bucket.
+Hash → equality.
+B+ tree → range/order.
