@@ -1431,3 +1431,222 @@ Query trees represent relational operations.
 Equivalent trees can have different costs.
 Pipelining avoids fully materializing every intermediate result.
 Don't use a nested-loop cost formula without checking assumptions.
+
+
+
+
+11. ER MODEL
+11.1 Entity
+
+A distinguishable real-world object.
+
+Examples:
+
+Student
+Employee
+Book
+Customer
+Entity Set
+
+Collection of similar entities.
+
+11.2 Attributes
+Simple
+
+Cannot be meaningfully divided.
+
+Composite
+
+Can be divided.
+
+Example:
+
+Name
+ ├── First
+ └── Last
+Single-Valued
+
+One value per entity.
+
+Multivalued
+
+Multiple values.
+
+Example:
+
+PhoneNumbers
+Stored
+
+Actually stored.
+
+Derived
+
+Calculated.
+
+Example:
+
+Age ← DateOfBirth
+11.3 Key Attribute
+
+Uniquely identifies entity.
+
+Traditionally represented by underlining.
+
+11.4 Relationship
+
+Association between entities.
+
+STUDENT ─── ENROLLS ─── COURSE
+11.5 Relationship Degree
+
+Number of participating entity sets.
+
+Unary
+
+One entity set.
+
+Binary
+
+Two.
+
+Ternary
+
+Three.
+
+🔥 Trap
+
+Degree ≠ number of attributes.
+
+11.6 Cardinality ⭐⭐⭐⭐⭐
+1:1
+1:N
+N:1
+M:N
+
+Means mapping ratio.
+
+Shortcut
+
+Cardinality → HOW MANY?
+
+11.7 Participation
+Total
+
+Every entity must participate.
+
+Partial
+
+Participation optional.
+
+Shortcut
+
+Participation → MUST OR OPTIONAL?
+
+11.8 Weak Entity ⭐⭐⭐⭐⭐
+
+A weak entity:
+
+Does not have a complete key of its own.
+Depends on an owner/strong entity.
+Has a partial key.
+Has total participation in identifying relationship.
+
+Traditional notation:
+
+Double rectangle → Weak entity
+Double diamond → Identifying relationship
+11.9 Relationship Attributes
+
+An attribute can belong to a relationship.
+
+Example:
+
+STUDENT ─ ENROLLS ─ COURSE
+               |
+             Grade
+
+Grade belongs to the particular enrollment.
+
+11.10 Specialization
+
+Top-down.
+
+EMPLOYEE
+ /     \
+FACULTY STAFF
+11.11 Generalization
+
+Bottom-up.
+
+CAR       TRUCK
+  \       /
+   VEHICLE
+Shortcut
+Specialization → TOP → DOWN
+Generalization → BOTTOM → UP
+11.12 Disjoint vs Overlapping
+Disjoint
+
+Entity can belong to at most one subclass.
+
+Overlapping
+
+Entity can belong to multiple subclasses.
+
+11.13 Total vs Partial Specialization
+Total
+
+Every superclass entity must belong to a subclass.
+
+Partial
+
+Some superclass entities may belong to no subclass.
+
+11.14 ER → Relational Mapping
+Strong Entity
+
+Create relation.
+
+Composite Attribute
+
+Store components.
+
+Multivalued Attribute
+
+Create separate relation.
+
+Example:
+
+STUDENT_PHONE(RollNo, Phone)
+1:N Relationship
+
+Put FK of the 1-side into the N-side.
+
+DEPARTMENT 1 ─── N EMPLOYEE
+
+EMPLOYEE(..., DeptID)
+M:N Relationship
+
+Create separate relation:
+
+ENROLLMENT(StudentID, CourseID)
+
+Relationship attributes also go there:
+
+ENROLLMENT(StudentID, CourseID, Grade)
+🔥 ER TRAPS
+Entity = individual object.
+Entity set = collection.
+Composite ≠ multivalued.
+Derived attribute = calculated.
+Degree = participating entity sets.
+Cardinality = mapping ratio.
+Participation = mandatory/optional.
+Weak entity lacks complete key.
+Weak entity depends on owner.
+Specialization = top-down.
+Generalization = bottom-up.
+Disjoint ≠ total participation.
+1:N → FK generally on N-side.
+M:N → separate relation.
+Multivalued attribute → separate relation.
