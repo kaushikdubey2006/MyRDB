@@ -879,3 +879,138 @@ Cascadeless → read only committed writes.
 Strict → prevents reads/writes of uncommitted written item.
 Strict ⇒ Cascadeless ⇒ Recoverable.
 Conflict serializable ⇒ View serializable.
+
+
+
+
+
+
+7. CONCURRENCY CONTROL
+7.1 Problems
+Lost Update
+
+One transaction's update gets overwritten.
+
+Dirty Read
+
+Reading uncommitted data.
+
+Unrepeatable Read
+
+Same row gives different values when read again.
+
+Phantom Read
+
+Repeated query returns a different set of rows because another transaction inserted/deleted matching rows.
+
+7.2 Locks
+Shared Lock (S)
+
+Used for reading.
+
+Multiple S locks can coexist.
+
+Exclusive Lock (X)
+
+Used for writing.
+
+X is incompatible with S and X.
+
+7.3 Compatibility
+	S	X
+S	✅	❌
+X	❌	❌
+7.4 Two-Phase Locking (2PL)
+Growing Phase
+
+Acquire locks.
+
+Shrinking Phase
+
+Release locks.
+
+After the first lock is released:
+
+No new lock can be acquired under standard 2PL.
+
+2PL guarantees conflict serializability but can cause deadlocks.
+
+7.5 Strict 2PL
+
+Holds X locks until commit/abort.
+
+7.6 Rigorous 2PL
+
+Holds both S and X locks until commit/abort.
+
+Relationship:
+
+$$ \boxed{Rigorous\Rightarrow Strict\Rightarrow 2PL} $$
+7.7 Deadlock
+
+Transactions wait for each other indefinitely.
+
+Wait-for graph:
+
+T1 → T2
+T2 → T1
+
+Cycle = deadlock.
+
+7.8 Wait-Die ⭐⭐⭐⭐⭐
+
+Older transaction requests younger's lock:
+
+Older → waits
+
+Younger requests older's lock:
+
+Younger → dies/aborts
+Memory
+
+Wait-Die: Older waits, younger dies.
+
+7.9 Wound-Wait
+
+Older requests younger's resource:
+
+Younger → aborted/wounded
+
+Younger requests older's resource:
+
+Younger → waits
+Memory
+
+Wound-Wait: Older wounds, younger waits.
+
+7.10 Timestamp Ordering
+
+Each transaction gets a timestamp.
+
+Smaller timestamp:
+
+Older transaction.
+
+Maintain:
+
+ReadTS(X)
+WriteTS(X)
+
+Basic timestamp ordering aborts a transaction when an operation violates the required timestamp order.
+
+🔥 CONCURRENCY TRAPS
+S-S compatible.
+S-X incompatible.
+X-X incompatible.
+2PL → growing + shrinking.
+After releasing first lock → no new lock under standard 2PL.
+2PL guarantees conflict serializability.
+2PL can still deadlock.
+Strict 2PL → X locks till commit/abort.
+Rigorous → S and X till commit/abort.
+Rigorous ⇒ Strict ⇒ 2PL.
+Wait-for cycle → deadlock.
+Wait-Die → older waits, younger dies.
+Wound-Wait → older wounds, younger waits.
+Smaller timestamp → older.
+Timestamp ordering avoids lock-wait deadlocks.
