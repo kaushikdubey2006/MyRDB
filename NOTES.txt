@@ -1543,3 +1543,194 @@ We will decide the exact implementation when we build the storage engine.
 ### Key Definition
 
 > **Record Update modifies an existing record and manages the new serialized size, available space, and Slot Directory information.**
+----------------------------------------------------------------------------------------------------------------------
+
+3.11 Record Delete
+
+Record Delete is the process of removing an existing record from a page.
+
+Example:
+
+DELETE FROM Students WHERE ID = 101;
+
+Suppose the page contains:
+
+Slot 0 → Offset 100, Length 20
+
+and Slot 0 contains:
+
+101, Aman, 20
+
+After deletion, MyRDB must make that storage available for future use.
+
+1. Basic Delete Flow
+DELETE SQL
+   ↓
+Find Record
+   ↓
+Page ID + Slot ID
+   ↓
+Find Offset + Length
+   ↓
+Mark/Remove Record
+   ↓
+Update Slot
+   ↓
+Recover/Mark Free Space
+   ↓
+Update Page Metadata
+2. What happens to the Slot?
+
+Suppose initially:
+
+Slot 0 → Record A
+Slot 1 → Record B
+Slot 2 → Record C
+
+We delete Record B.
+
+We generally don't shift Slot 2 into Slot 1 because that could change existing storage references.
+
+Instead:
+
+Slot 0 → Record A
+Slot 1 → Deleted/Free
+Slot 2 → Record C
+
+The slot can later potentially be reused.
+
+3. What happens to the Record Bytes?
+
+Suppose:
+
+Slot 1 → Offset 120, Length 25
+
+After deletion, those 25 bytes are no longer considered a valid active record.
+
+Conceptually:
+
+Before:
+
+Offset 120 → Record B
+
+After:
+
+Offset 120 → Free/Unused Space
+
+The exact physical bytes don't necessarily have to be immediately erased.
+
+This is an important concept:
+
+Logical deletion and physical erasure are different things.
+
+MyRDB can mark the record as deleted/free and later reuse that space.
+
+4. What happens to Free Space?
+
+Suppose:
+
+Free Space = 300 bytes
+
+and the deleted record occupied:
+
+25 bytes
+
+Conceptually, available space can increase:
+
+300 + 25 = 325 bytes
+
+However, actual free-space accounting can be more complicated if the page has fragmentation or if the slot directory itself remains allocated.
+
+We will handle the exact implementation during the storage-engine implementation phase.
+
+5. Why not simply remove everything?
+
+Suppose:
+
+Slot 0 → A
+Slot 1 → B
+Slot 2 → C
+
+If B is deleted and we physically shift C:
+
+Slot 0 → A
+Slot 1 → C
+
+then Slot 2 changes/disappears.
+
+That can make existing internal references invalid.
+
+Therefore, keeping the slot identity stable is useful.
+
+6. Slot Reuse
+
+After deletion:
+
+Slot 0 → A
+Slot 1 → Free
+Slot 2 → C
+
+A future INSERT may reuse Slot 1:
+
+Slot 0 → A
+Slot 1 → D
+Slot 2 → C
+
+This avoids unnecessarily creating new slot IDs.
+
+7. Small Example
+
+Suppose:
+
+Slot 1 → Offset 120, Length 25
+
+Delete it:
+
+Slot 1 → Deleted/Free
+Offset 120–144 → Space becomes reusable
+
+Later, a new record may occupy that space.
+
+8. Important: DELETE vs Physical Erasure
+
+A database does not necessarily need to immediately overwrite every deleted byte with zeros.
+
+There are two conceptual steps:
+
+Logical deletion:
+
+Record is no longer considered valid/visible.
+
+Physical space reclamation:
+
+Its storage becomes available for reuse.
+
+These can happen separately.
+
+Complete MyRDB Delete Flow
+DELETE SQL
+    ↓
+Parser
+    ↓
+Executor
+    ↓
+Locate Record
+    ↓
+Page ID + Slot ID
+    ↓
+Slot Directory
+    ↓
+Offset + Length
+    ↓
+Mark Record Deleted
+    ↓
+Mark Space Reusable
+    ↓
+Update Slot
+    ↓
+Update Free Space
+    ↓
+Update Page Metadata
+Key Point
+
+Record Delete removes a record logically, makes its storage available for reuse, updates the corresponding slot, and maintains correct page/free-space information.
