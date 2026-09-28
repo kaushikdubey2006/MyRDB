@@ -1,43 +1,107 @@
-CHAPTER 1 — PROJECT FOUNDATION & CONFIGURATION
-1.1 Objective
-The objective is to create the basic foundation of MyRDB.
-It defines common settings used by different database modules.
-It provides a centralized configuration system.
-It helps maintain consistency throughout the RDBMS.
-It prepares the project for binary storage, indexing, WAL, and other components.
+# MyRDB — MASTER DEVELOPMENT & LEARNING NOTES
 
---------------------------------------------------------------------------------------------
-1.2 Configuration
-Configuration means defining common settings and constants of the system.
-In MyRDB, configuration is stored in config.py.
+**Project:** MyRDB — Custom Relational Database Management System
+**Language:** Python
+**Current Development:** Chapter 1–3 Completed
+**Documentation Type:** Live Development Notes
+
+---
+
+# CHAPTER 1 — PROJECT FOUNDATION & CONFIGURATION
+
+## 1.1 Objective
+
+The objective of Chapter 1 is to create the basic foundation of MyRDB.
+
+Before implementing storage, indexing, transactions, WAL, SQL processing, and other database components, MyRDB needs a centralized configuration system.
+
+The configuration layer:
+
+* Defines common settings used by different database modules.
+* Provides a centralized configuration system.
+* Helps maintain consistency throughout the RDBMS.
+* Avoids repeatedly defining the same values in different files.
+* Makes the system easier to modify and maintain.
+* Provides the foundation for binary storage and other database components.
+
+The main configuration file is:
+
+```text
+config.py
+```
+
+The configuration values defined here can be imported by other MyRDB modules.
+
+---
+
+## 1.2 Configuration
+
+Configuration means defining common settings and constants used throughout the system.
+
+In MyRDB, configuration is stored in:
+
+```text
+config.py
+```
+
 Other modules can import these values when required.
-It avoids defining the same value repeatedly in different files.
-It makes the system easier to modify and maintain.
 
-Example:
+### Why use centralized configuration?
 
+Without centralized configuration, different modules might independently define:
+
+```python
 PAGE_SIZE = 4096
+```
 
-This tells the storage engine that each page is 4096 bytes.
------------------------------------------------------------------------------------------------
+This could lead to inconsistent values.
 
-1.3 Use of Configuration in MyRDB
+Instead:
 
-Configuration will define things like:
+```text
+config.py
+    ↓
+Common Configuration
+    ↓
+Other MyRDB Components
+```
 
-Page size
-Page/file identification
-Storage format version
-Database file location
-Database file extension
-Index file extension
-WAL location
-Backup location
-Checkpoint location
-Database/table/column name limits
+This provides:
 
-Basic flow:
+* Consistency
+* Maintainability
+* Easier modification
+* Centralized control
 
+### Example
+
+```python
+PAGE_SIZE = 4096
+```
+
+This tells the storage engine that every MyRDB page has a fixed size of 4096 bytes.
+
+---
+
+## 1.3 Use of Configuration in MyRDB
+
+The configuration system defines values such as:
+
+* Page size
+* Page/file identification
+* Storage format version
+* Database file location
+* Database file extension
+* Index file extension
+* WAL location
+* Backup location
+* Checkpoint location
+
+These values can then be used by different components.
+
+### Basic Flow
+
+```text
 config.py
    ↓
 Storage Engine
@@ -47,183 +111,404 @@ B+ Tree
 WAL
    ↓
 Other Engine Components
+```
 
--------------------------------------------------------------------------------------------------
-1.4 PAGE_SIZE
+The important idea is that database components should not independently decide important storage parameters.
+
+They should use the centralized configuration.
+
+---
+
+## 1.4 PAGE_SIZE
+
+```python
 PAGE_SIZE = 4096
-PAGE_SIZE defines the size of one database page.
-MyRDB uses 4096 bytes (4 KB) fixed-size pages.
+```
+
+`PAGE_SIZE` defines the size of one database page.
+
+MyRDB uses:
+
+```text
+4096 bytes = 4 KB
+```
+
+fixed-size pages.
+
 Database files are divided into these pages.
-Fixed-size pages make disk storage and page addressing easier.
-The storage engine will use this value while reading and writing pages.
 
-Example:
+### Example
 
+```text
 Database File
 │
 ├── Page 0 → 4096 bytes
 ├── Page 1 → 4096 bytes
 ├── Page 2 → 4096 bytes
 └── Page 3 → 4096 bytes
+```
 
--------------------------------------------------------------------------------------------------------
+Each page has the same fixed size.
 
-1.5 PAGE_MAGIC
+### Why fixed-size pages?
+
+Fixed-size pages make:
+
+* Disk storage easier to manage.
+* Page addressing predictable.
+* Page offsets easy to calculate.
+* Page-level reading and writing easier.
+
+The storage engine can calculate a page's location using:
+
+```text
+Page Offset = Page ID × PAGE_SIZE
+```
+
+For example:
+
+```text
+Page ID = 2
+PAGE_SIZE = 4096
+
+Page Offset = 2 × 4096
+            = 8192 bytes
+```
+
+---
+
+## 1.5 PAGE_MAGIC
+
+```python
 PAGE_MAGIC = b"MYDB"
-PAGE_MAGIC is a special sequence of bytes used to identify the MyRDB format.
-It helps the engine check whether a page/file belongs to MyRDB.
-It is stored in the page/file header.
-It helps detect invalid or incompatible files.
-It is not a security feature.
+```
 
-Basic checking:
+`PAGE_MAGIC` is a special sequence of bytes used to identify the MyRDB format.
 
+It helps the engine determine whether a page contains data belonging to the expected MyRDB format.
+
+### Uses
+
+`PAGE_MAGIC` helps:
+
+* Identify a valid MyRDB page.
+* Detect invalid files.
+* Validate page headers.
+* Detect incompatible or unexpected data.
+
+### Basic Checking
+
+```text
 Read Page
    ↓
 Check Magic
    ↓
 MYDB?
- /   \
-Yes   No
- ↓     ↓
-Valid  Error
-Easy way to remember:
+ ┌───┴───┐
+Yes      No
+ ↓        ↓
+Valid    Error
+```
 
-PAGE_MAGIC = "Is this a MyRDB page?"
---------------------------------------------------------------------------------------------------------
+### Important
 
+`PAGE_MAGIC` is **not a security feature**.
 
-1.6 FORMAT_VERSION
+It is a format-identification and validation mechanism.
+
+### Easy Way to Remember
+
+```text
+PAGE_MAGIC
+=
+"Is this a MyRDB page?"
+```
+
+---
+
+## 1.6 FORMAT_VERSION
+
+```python
 FORMAT_VERSION = 1
-FORMAT_VERSION identifies the version of MyRDB's binary storage format.
-It helps the engine understand how the stored data is structured.
-The format can change in future versions.
-Version checking prevents the engine from incorrectly reading an incompatible database file.
+```
 
-Example:
+`FORMAT_VERSION` identifies the version of MyRDB's binary storage format.
 
+The storage format defines how data is organized inside database pages and files.
+
+If the storage format changes in a later version, the database engine needs a way to determine which format it is reading.
+
+### Why is versioning needed?
+
+Suppose MyRDB currently uses:
+
+```text
+MYDB + Version 1
+```
+
+and later changes its binary layout:
+
+```text
+MYDB + Version 2
+```
+
+The engine can use the version number to determine how the stored data should be interpreted.
+
+### Example
+
+```text
 MYDB + Version 1 → Current MyRDB format
-MYDB + Version 2 → Future format
-Easy way to remember:
+MYDB + Version 2 → Different/Future format
+```
 
-PAGE_MAGIC → Which format?
+### Easy Way to Remember
 
-FORMAT_VERSION → Which version of that format?
----------------------------------------------------------------------------------------------------------
+```text
+PAGE_MAGIC
+→ Which format?
 
-1.7 Data Directory
+FORMAT_VERSION
+→ Which version of that format?
+```
 
-The Data Directory is the main location where MyRDB stores its persistent database-related files.
+---
+
+## 1.7 Data Directory
+
+The Data Directory is the main location where MyRDB stores persistent database-related files.
 
 In MyRDB:
 
+```python
 DATA_DIR = Path("data")
+```
 
-Structure:
+### Structure
 
+```text
 MyRDB/
 └── data/
+```
 
-Use: Provides a central location for database, backup, checkpoint, and WAL files.
+The directory provides a central location for database-related storage.
 
-Implementation: ✅ Path defined in config.py.
---------------------------------------------------------------------------------------------------------------
+It can contain:
 
-1.8 Database File Extension
+* Database files
+* WAL files
+* Backup files
+* Checkpoint information
+
+### Implementation
+
+```text
+DATA_DIR = Path("data")
+```
+
+The path is defined in `config.py`.
+
+---
+
+## 1.8 Database File Extension
 
 The database file extension identifies MyRDB database files.
 
+```python
 DATABASE_EXTENSION = ".db"
+```
 
-Example:
+### Examples
 
+```text
 students.db
 college.db
+company.db
+```
 
-Use: Helps MyRDB identify and manage database files.
+The `.db` extension is a naming convention used to identify database storage files.
 
-Implementation: ✅ Extension defined in config.py; actual .db files will be created later.
-----------------------------------------------------------------------------------------------------------------
+### Use
 
-1.9 Index File Extension
+It helps MyRDB:
+
+* Identify database files.
+* Organize database storage.
+* Manage database file names.
+
+### Implementation
+
+The extension is defined in `config.py`.
+
+Actual database file creation is handled by the storage/database components.
+
+---
+
+## 1.9 Index File Extension
 
 The index file extension is used for persistent index files.
 
+```python
 INDEX_EXTENSION = ".idx"
+```
 
-Example:
+### Example
 
+```text
 students.idx
+```
 
-Use: Used later to store persistent index information such as B+ Tree data.
+### Use
 
-Implementation: ✅ Extension defined; actual index implementation comes later.
------------------------------------------------------------------------------------------------------------------------
-1.10 WAL File
+The extension can be used for storing persistent index information such as B+ Tree data.
 
-WAL = Write-Ahead Log
+The index storage mechanism is separate from the extension itself.
 
-WAL stores a record of database changes before they are safely written to database pages.
+The extension simply defines the expected naming convention.
 
+---
+
+## 1.10 WAL File
+
+**WAL = Write-Ahead Log**
+
+A Write-Ahead Log stores database changes before those changes are safely written to the database pages.
+
+Conceptually:
+
+```text
 INSERT / UPDATE / DELETE
           ↓
          WAL
           ↓
     Database Page
+```
 
-Use: Helps with crash recovery.
+### Why WAL?
 
-MyRDB location:
+WAL is mainly associated with:
 
+* Crash recovery
+* Durability
+* Recovery after unexpected shutdown
+* Tracking database changes
+
+### MyRDB WAL Location
+
+```python
 WAL_FILE = DATA_DIR / "engine.wal"
+```
 
-Implementation: ✅ WAL location defined.
-❌ WAL mechanism not implemented yet.
+Therefore:
 
-WAL is not a backup. It is a recovery log.
------------------------------------------------------------------------------------------------------------------------
-1.11 Backup Directory
+```text
+data/
+└── engine.wal
+```
+
+### Important Distinction
+
+```text
+WAL ≠ Backup
+```
+
+A WAL is a **recovery log**.
+
+A backup is a separate stored copy of database data.
+
+The WAL location is configured in Chapter 1, while the actual WAL mechanism belongs to the recovery/transaction system.
+
+---
+
+## 1.11 Backup Directory
 
 The Backup Directory is the location where database backup copies are stored.
 
+```python
 BACKUP_DIR = DATA_DIR / "backups"
+```
 
-Structure:
+### Structure
 
+```text
 data/
 └── backups/
+```
 
-Use: Allows database data to be restored from a saved copy.
+### Use
 
-Implementation: ✅ Path defined.
-❌ Backup system not implemented yet.
---------------------------------------------------------------------------------------------------------------------------
-1.12 Checkpoint Directory
+A backup system can use this directory to store saved copies of database data.
+
+This provides a location for restoration-related files.
+
+The directory path itself is part of the project configuration.
+
+---
+
+## 1.12 Checkpoint Directory
 
 The Checkpoint Directory stores checkpoint-related information used during database recovery.
 
+```python
 CHECKPOINT_DIR = DATA_DIR / "checkpoints"
+```
 
-Structure:
+### Structure
 
+```text
 data/
 └── checkpoints/
+```
 
-Use: Helps make crash recovery more efficient by providing a known recovery state.
+### Use
 
-Implementation: ✅ Path defined.
-❌ Checkpoint mechanism not implemented yet.
+Checkpoints can help make crash recovery more efficient by providing a known recovery state.
 
+The directory is configured at the foundation level.
 
-=======================================================================================================================
-=======================================================================================================================
+---
 
+# CHAPTER 1 — IMPLEMENTATION SUMMARY
 
-CHAPTER 2 — STORAGE
-2.1 Storage Layer Objective
+The configuration foundation established:
+
+```text
+PAGE_SIZE
+PAGE_MAGIC
+FORMAT_VERSION
+DATA_DIR
+DATABASE_DIR
+DATABASE_EXTENSION
+INDEX_EXTENSION
+WAL_FILE
+BACKUP_DIR
+CHECKPOINT_DIR
+```
+
+Main configuration file:
+
+```text
+config.py
+```
+
+The chapter established the common configuration layer required by the rest of MyRDB.
+
+**Status: ✅ Complete**
+
+### Next
+
+**Chapter 2 — Storage & Page Management**
+
+---
+
+# CHAPTER 2 — STORAGE & PAGE MANAGEMENT
+
+## 2.1 Storage Layer Objective
 
 The Storage Layer is responsible for managing how database data is stored and retrieved from disk.
 
+The basic relationship is:
+
+```text
 Query
   ↓
 Engine
@@ -233,27 +518,45 @@ Storage Layer
 Database File
   ↓
 Disk
-Main responsibilities:
-Create and open database files
-Read and write pages
-Manage free space
-Store records
-Manage page locations
+```
 
------------------------------------------------------------------------------------------------------------------
+The storage layer acts as the connection between the logical database engine and physical disk storage.
 
-2.2 Page Structure / Page Layout
+### Main Responsibilities
+
+The storage layer is responsible for:
+
+* Creating database files.
+* Opening database files.
+* Reading pages.
+* Writing pages.
+* Managing page locations.
+* Managing free space.
+* Storing records.
+
+The page-based design provides a predictable unit for physical storage.
+
+---
+
+# 2.2 Page Structure / Page Layout
 
 A page is a fixed-size unit of database storage.
 
 In MyRDB:
 
+```text
 PAGE_SIZE = 4096
+```
 
-So each page is initially 4096 bytes.
+Therefore, one page initially occupies:
 
-Basic structure:
+```text
+4096 bytes
+```
 
+### Basic Page Structure
+
+```text
 ┌──────────────────────┐
 │     Page Header      │
 ├──────────────────────┤
@@ -264,29 +567,47 @@ Basic structure:
 │    Slot Directory    │
 └──────────────────────┘
        4096 bytes
-Main sections:
-Page Header → Page metadata
-Record Data → Actual database records
-Free Space → Unused space
-Slot Directory → Record locations inside the page
+```
 
-Implementation: 📖 Concept only so far.
---------------------------------------------------------------------------------------------------------------------
+### Main Sections
 
-2.3 Page Header
+#### Page Header
 
-The Page Header is the metadata section at the beginning of a page.
+Contains metadata about the page.
 
-It can contain:
+#### Record Data
 
-Magic → Identifies a valid MyRDB page
-Version → Identifies storage format version
-Page ID → Identifies the page
-Record Count → Number of records
-Free Space Information → Available space
+Contains the actual database records.
 
-Example:
+#### Free Space
 
+Contains unused space available for storing or modifying records.
+
+#### Slot Directory
+
+Contains information required to locate records inside the page.
+
+The exact record/slot implementation is developed in Chapter 3.
+
+---
+
+# 2.3 Page Header
+
+The Page Header is the metadata section at the beginning of a database page.
+
+It contains information such as:
+
+```text
+Magic
+Version
+Page ID
+Record Count
+Free Space
+```
+
+### Example Layout
+
+```text
 ┌──────────────────────┐
 │ Magic                │
 │ Version              │
@@ -299,212 +620,394 @@ Example:
 ├──────────────────────┤
 │ Slot Directory       │
 └──────────────────────┘
-Chapter 1 connection:
+```
+
+### Chapter 1 Connection
+
+The Page Header uses the configuration values:
+
+```python
 PAGE_MAGIC = b"MYDB"
 FORMAT_VERSION = 1
+```
 
-These values will be used in the page header.
+These values allow MyRDB to identify and validate stored pages.
 
-Implementation: 📖 Design understood; actual header code comes later.
+---
 
-------------------------------------------------------------------------------------------------------------------
+# 2.4 Binary Data & struct
 
-2.4 Binary Data & struct
+Database pages are ultimately stored as binary data.
 
-Database pages are ultimately stored as binary data (bytes).
+A file does not directly store a Python object such as:
 
-Python values must therefore be converted into bytes before being written to a database file.
+```python
+{
+    "page_id": 5,
+    "record_count": 3
+}
+```
 
-struct
+Instead, the values must be converted into bytes.
 
-Python's struct module converts values between Python objects and fixed binary formats.
+Python provides the `struct` module for this purpose.
 
-pack()
-Python values
+### Packing
+
+```text
+Python Values
      ↓
 struct.pack()
      ↓
 Bytes
-unpack()
+```
+
+### Unpacking
+
+```text
 Bytes
   ↓
 struct.unpack()
   ↓
-Python values
-Use in MyRDB
+Python Values
+```
 
-It will allow MyRDB to store and read the Page Header in a fixed and predictable binary format.
+### MyRDB Storage Flow
 
+```text
 Page Header
      ↓
 struct.pack()
      ↓
-Bytes
+Binary Bytes
      ↓
-database.db
+Database File
+```
 
 When reading:
 
-database.db
+```text
+Database File
      ↓
-Bytes
+Binary Bytes
      ↓
 struct.unpack()
      ↓
-Page Header values
-------------------------------------------------------------------------------------------------------------------
-2.5 Page Header Binary Layout
+Page Header Values
+```
 
-Page Header is the metadata stored at the beginning of every database page.
+### Important
 
-In MyRDB, the Page Header contains:
+`struct` performs conversion.
 
-Field	Size	Purpose
-Magic	4 bytes	Identifies a valid MyRDB page
-Version	2 bytes	Identifies storage format version
-Page ID	4 bytes	Identifies the page
-Record Count	2 bytes	Number of records in the page
-Free Space	4 bytes	Available free space in the page
+It does not itself write data to the database file.
 
-Total Header Size = 4 + 2 + 4 + 2 + 4 = 16 bytes
+File operations such as:
 
-Binary Layout
-Byte 0–3     → Magic
-Byte 4–5     → Version
-Byte 6–9     → Page ID
-Byte 10–11   → Record Count
-Byte 12–15   → Free Space
+```python
+read()
+write()
+seek()
+```
 
-Since MyRDB uses a 4096-byte page:
+perform the actual file I/O.
 
+---
+
+# 2.5 Page Header Binary Layout
+
+The Page Header contains five fields.
+
+| Field        |    Size | Purpose                           |
+| ------------ | ------: | --------------------------------- |
+| Magic        | 4 bytes | Identifies a valid MyRDB page     |
+| Version      | 2 bytes | Identifies storage format version |
+| Page ID      | 4 bytes | Identifies the page               |
+| Record Count | 2 bytes | Number of records                 |
+| Free Space   | 4 bytes | Available space                   |
+
+### Total Header Size
+
+```text
+4 + 2 + 4 + 2 + 4
+=
+16 bytes
+```
+
+Therefore:
+
+```text
+PAGE_HEADER_SIZE = 16 bytes
+```
+
+### Binary Layout
+
+```text
+Byte 0–3
+    ↓
+Magic
+
+Byte 4–5
+    ↓
+Version
+
+Byte 6–9
+    ↓
+Page ID
+
+Byte 10–11
+    ↓
+Record Count
+
+Byte 12–15
+    ↓
+Free Space
+```
+
+### Remaining Page Space
+
+Since the page is 4096 bytes:
+
+```text
 4096 - 16 = 4080 bytes
+```
 
-So, 4080 bytes remain for record data, free space, and slot directory.
--------------------------------------------------------------------------------------------------------------------
+These remaining bytes are available for the rest of the page layout.
 
-2.6 Field Sizes & Struct Format
+---
 
-Python struct is used to convert Python values into a fixed binary format for storage.
+# 2.6 Field Sizes & Struct Format
 
-Struct Format Codes
-Code	Meaning	Size
-4s	4-byte bytes field	4 B
-H	Unsigned short integer	2 B
-I	Unsigned integer	4 B
+Python's `struct` module uses format codes to describe binary fields.
 
-Therefore, MyRDB's Page Header format is:
+### Struct Format Codes
 
+| Code | Meaning                |    Size |
+| ---- | ---------------------- | ------: |
+| `4s` | 4-byte bytes field     | 4 bytes |
+| `H`  | Unsigned short integer | 2 bytes |
+| `I`  | Unsigned integer       | 4 bytes |
+
+Therefore, the Page Header can be represented as:
+
+```text
 4s H I H I
+```
 
 Combined:
 
-"4sHIHI"
-Meaning
+```text
+"<4sHIHI"
+```
+
+### Meaning
+
+```text
 4s → Magic
 H  → Version
 I  → Page ID
 H  → Record Count
 I  → Free Space
+```
 
-Example:
+### Example
 
-struct.pack("4sHIHI",
-            b"MYDB",
-            1,
-            5,
-            3,
-            2000)
+```python
+struct.pack(
+    "<4sHIHI",
+    b"MYDB",
+    1,
+    5,
+    3,
+    2000
+)
+```
 
-This converts:
+The values represent:
 
+```text
 Magic        = MYDB
 Version      = 1
 Page ID      = 5
 Record Count = 3
 Free Space   = 2000
+```
 
-into binary bytes.
+These values are converted into a fixed binary representation.
 
-Important
-struct.pack() → Python values → bytes
-struct.unpack() → bytes → Python values
-struct only performs conversion.
-File operations such as read() and write() actually access the .db file.
---------------------------------------------------------------------------------------------------------------------
-2.7 — Byte Order / Endianness
-New Concept
+### Important
 
-Endianness means the order in which multiple bytes of a value are stored in memory or in a binary file.
+```text
+struct.pack()
+Python values → bytes
+```
 
-Jab hum struct se Page ID, Version, Free Space jaise numbers ko bytes mein convert karenge, toh decide karna padega ki bytes kis order mein store honge.
+and:
 
-There are two common byte orders:
+```text
+struct.unpack()
+bytes → Python values
+```
 
-1. Little-Endian
+Again:
+
+```text
+struct → conversion
+File I/O → actual file access
+```
+
+---
+
+# 2.7 Byte Order / Endianness
+
+## New Concept
+
+Endianness means the order in which multiple bytes of a value are stored.
+
+When MyRDB converts values such as:
+
+* Page ID
+* Version
+* Record Count
+* Free Space
+
+into bytes, the byte order must be defined.
+
+There are two common byte orders.
+
+---
+
+## Little-Endian
 
 The least significant byte is stored first.
 
 Example:
 
+```text
 Number = 0x12345678
+```
 
-Little-Endian:
+Little-Endian representation:
+
+```text
 78 56 34 12
-2. Big-Endian
+```
+
+---
+
+## Big-Endian
 
 The most significant byte is stored first.
 
+```text
 Number = 0x12345678
+```
 
-Big-Endian:
+Big-Endian representation:
+
+```text
 12 34 56 78
-Why do we need it in MyRDB?
+```
+
+---
+
+## Why Does MyRDB Need Endianness?
 
 MyRDB stores pages as binary data.
 
-If we don't explicitly define the byte order, 
-the same database file could potentially be interpreted differently on different systems.
+Therefore, the database format must define how multi-byte numbers are represented.
 
-So MyRDB should have a fixed binary format.
+A fixed byte order ensures predictable interpretation of the binary format.
 
-For our project, we'll use Little-Endian.
+### MyRDB Choice
 
-Our struct format will therefore becom
--------------------------------------------------------------------------------------------------------------------------
-2.8 Page Header Implementation Design
-A Page Header stores metadata about a database page.
-MyRDB will represent the Page Header using a Python class.
-The class will contain:
+MyRDB uses:
+
+```text
+Little-Endian
+```
+
+Therefore, the struct format becomes:
+
+```python
+"<4sHIHI"
+```
+
+The `<` specifies Little-Endian.
+
+---
+
+# 2.8 Page Header Implementation Design
+
+The Page Header is represented using a Python class.
+
+The class contains:
+
+```text
 magic
 version
 page_id
 record_count
 free_space
-struct.pack() will convert the header values into binary bytes.
-struct.unpack() will convert binary bytes back into Python values.
-The header size will be 16 bytes.
-This design will be implemented later in storage/page_engine.py.
-Basic Flow
+```
+
+### Packing
+
+```text
 PageHeader Object
        ↓
-   struct.pack()
+struct.pack()
        ↓
-   16 Bytes
+16 Bytes
        ↓
- Database Page
- --------------------------------------------------------------------------------------------------------------------
-2.9 Page Creation & Initialization
-Page Initialization means preparing a new empty page for database use.
-MyRDB will create pages of fixed size 4096 bytes.
-Every new page will have a Page Header.
-Initial record_count will be 0.
-The page will initially contain no records.
-page_id will uniquely identify the page.
+Database Page
+```
 
-The remaining space will be available for records and the slot directory.
-Page initialization prepares the page before records are inserted.
+### Unpacking
 
-Flow
+```text
+16 Bytes
+    ↓
+struct.unpack()
+    ↓
+PageHeader Object
+```
+
+The implementation is contained in:
+
+```text
+storage/page_engine.py
+```
+
+The header therefore acts as the metadata layer for each physical page.
+
+---
+
+# 2.9 Page Creation & Initialization
+
+Page initialization means preparing a new empty page for database use.
+
+MyRDB creates pages of:
+
+```text
+4096 bytes
+```
+
+Every new page contains a Page Header.
+
+### Initial Values
+
+```text
+record_count = 0
+```
+
+The page initially contains no active records.
+
+The page also receives a `page_id` that identifies it.
+
+### Initialization Flow
+
+```text
 New Page Required
        ↓
 Create Page Header
@@ -516,55 +1019,98 @@ Create 4096-Byte Page
 Place Header
        ↓
 Page Ready
+```
 
---------------------------------------------------------------------------------------------------------------------
+This creates the physical foundation on which records can later be stored.
 
-2.10 Page Read / Write
+---
+
+# 2.10 Page Read / Write
 
 File I/O means reading data from and writing data to a file.
-MyRDB will use file operations to access .db files.
-write() stores page bytes in the database file.
-read() retrieves page bytes from the database file.
-seek() moves to a specific position in the file.
-Each page has a fixed size of 4096 bytes.
 
-The location of a page can be calculated using:
+MyRDB uses binary file operations to access `.db` files.
+
+### Important Operations
+
+#### `write()`
+
+Stores page bytes in the database file.
+
+#### `read()`
+
+Retrieves page bytes from the database file.
+
+#### `seek()`
+
+Moves to a specific position in the file.
+
+---
+
+## Page Offset
+
+Because pages have fixed size, the position of a page can be calculated.
+
+```text
 Page Offset = Page ID × PAGE_SIZE
-Example:
+```
+
+### Example
+
+```text
 Page ID = 2
 Page Size = 4096
-Offset = 2 × 4096 = 8192 bytes
-Flow
-Page ID
-   ↓
-Calculate Offset
-   ↓
-seek()
-   ↓
-read() / write()
-   ↓
-Database File
-Important
-struct → converts Python values ↔ bytes.
-File I/O → transfers bytes ↔ disk file.
 
--------------------------------------------------------------------------------------------------------------------- 
+Offset = 2 × 4096
+       = 8192 bytes
+```
 
-2.11 Page Validation
+Therefore, Page 2 begins at byte 8192 of the database file.
+
+### Important Difference
+
+```text
+struct
+    ↓
+Python values ↔ bytes
+```
+
+while:
+
+```text
+File I/O
+    ↓
+bytes ↔ disk file
+```
+
+Both are required for binary database storage.
+
+---
+
+# 2.11 Page Validation
+
 Page Validation checks whether a page is a valid MyRDB page.
-It helps detect corrupted or incorrect pages.
-MyRDB will validate the Page Size.
-It will check the Magic Value.
-It will check the Format Version.
-It can check whether the Page ID matches the requested page.
-If validation fails, MyRDB will generate an appropriate error.
-Main Checks
-Check	Expected
-Page Size	4096 bytes
-Magic	MYDB
-Version	Supported version
-Page ID	Requested page ID
-Flow
+
+Validation helps detect:
+
+* Corrupted pages
+* Invalid pages
+* Incorrect page format
+* Wrong page IDs
+* Unsupported versions
+
+### Main Checks
+
+| Check     | Expected          |
+| --------- | ----------------- |
+| Page Size | 4096 bytes        |
+| Magic     | `MYDB`            |
+| Version   | Supported version |
+| Page ID   | Requested page ID |
+
+### Validation Flow
+
+```text
 Read Page
     ↓
 Check Size
@@ -576,40 +1122,78 @@ Check Version
 Check Page ID
     ↓
 Valid Page ✓
+```
 
---------------------------------------------------------------------------------------------------------------------
+If a validation check fails, MyRDB generates an appropriate error.
 
+---
 
-2.12 Page Testing
-Testing verifies that the storage system works correctly.
-MyRDB will test page creation.
-It will test Page Header values.
-It will test struct.pack() and struct.unpack().
-It will test page writing to a .db file.
-It will test reading the page back from the file.
-It will test page validation.
-It will also test invalid data and error conditions.
-Main Tests
-Page Creation Test
-Verify that a new page is created.
-Verify page size is 4096 bytes.
-Header Test
-Verify magic, version, page ID, record count, and free space.
-Pack/Unpack Test
-Pack Python values into bytes.
-Unpack the bytes.
-Verify that the original values are recovered.
-Read/Write Test
-Write a page to the .db file.
-Read the same page.
-Compare the results.
-Validation Test
-Test valid pages.
-Test invalid magic, version, size, etc.
-Error Test
-Intentionally provide invalid data.
-Verify that MyRDB generates the expected error.
-Final Testing Flow
+# 2.12 Page Testing
+
+Testing verifies that the storage system behaves correctly.
+
+### Page Creation Test
+
+Verify:
+
+* Page is created.
+* Page size is 4096 bytes.
+
+### Header Test
+
+Verify:
+
+* Magic
+* Version
+* Page ID
+* Record Count
+* Free Space
+
+### Pack/Unpack Test
+
+```text
+Python Values
+     ↓
+Pack
+     ↓
+Bytes
+     ↓
+Unpack
+     ↓
+Original Values
+```
+
+The result should match the original values.
+
+### Read/Write Test
+
+```text
+Write Page
+    ↓
+Read Page
+    ↓
+Compare
+```
+
+The page read from disk should contain the expected data.
+
+### Validation Test
+
+Test:
+
+* Valid pages
+* Invalid magic
+* Invalid version
+* Invalid size
+* Invalid page ID
+
+### Error Test
+
+Invalid data is intentionally provided to verify that MyRDB generates the expected error.
+
+### Final Testing Flow
+
+```text
 Create Page
      ↓
 Create Header
@@ -627,65 +1211,131 @@ Validate Page
 Compare Results
      ↓
 PASS ✓
-============================================================================================================================
-============================================================================================================================
+```
 
-COMPLETION OF CHAPTER 1 AND 2
+---
 
-CODING OF CHAPTER 1 AND 2 IS DONE ...
+# CHAPTER 2 — IMPLEMENTATION RESULT
 
-============================================================================================================================
-============================================================================================================================
+The page engine successfully established:
 
-CHAPTER-3  Record & Slot Managment
+* Fixed-size 4096-byte pages
+* Page Header
+* Binary serialization
+* Binary deserialization
+* Page creation
+* Page read/write
+* Page offset calculation
+* Page validation
+* Corruption detection
 
-3.1 Record Storage Objective
-What is a Record?
+### Important Fix
+
+During testing, an issue was found in `PageHeader.unpack()`.
+
+The initial implementation recreated default values instead of preserving the actual stored `magic` and `version`.
+
+The implementation was corrected so the values read from disk are preserved.
+
+This is important because data loaded from storage must represent the actual stored data.
+
+**Status: ✅ Complete**
+
+### Next
+
+**Chapter 3 — Record & Slot Management**
+
+---
+
+# CHAPTER 3 — RECORD & SLOT MANAGEMENT
+
+Chapter 2 established page-level storage.
+
+Chapter 3 moves from:
+
+```text
+"I can store pages."
+```
+
+to:
+
+```text
+"I can store actual records inside pages."
+```
+
+---
+
+# 3.1 Record Storage Objective
+
+## What is a Record?
 
 A record is a complete set of related data representing one row of a table.
 
 Example:
 
+```text
 Students
 --------------------------------
 ID      Name       Age
 101     Aman       20
+```
 
-Here:
+The following:
 
+```text
 101, Aman, 20
+```
 
 is one record.
 
-Why is Record Storage Needed?
+---
 
-In Chapter 2, we learned how MyRDB stores and manages pages. However, a page itself is not a database row.
+## Why Is Record Storage Needed?
 
-Chapter 3 introduces the mechanism for storing actual records inside pages.
+Chapter 2 focused on pages.
 
-Record vs Page
-Record	Page
-Represents a logical row	Represents a physical storage unit
-Contains actual field values	Contains records and metadata
-Example: 101, Aman, 20	Example: 4096-byte page
-Logical concept	Physical storage concept
-Record Identification
+However, a page itself is not a database row.
 
-A record will eventually be identified using:
+A page is a physical storage unit.
 
+Chapter 3 introduces the mechanism required to store actual database records inside those pages.
+
+### Record vs Page
+
+| Record                   | Page                               |
+| ------------------------ | ---------------------------------- |
+| Represents a logical row | Represents a physical storage unit |
+| Contains field values    | Contains records and metadata      |
+| Example: `101, Aman, 20` | Example: 4096-byte page            |
+| Logical concept          | Physical storage concept           |
+
+---
+
+## Record Identification
+
+A record will be physically referenced using:
+
+```text
 Page ID + Slot ID
+```
 
-The Slot Directory will map the Slot ID to the physical location of the record.
+The Slot Directory maps the Slot ID to the physical location of the record.
 
-MyRDB Flow
-SQL/Table Fields
+### MyRDB Flow
+
+```text
+SQL / Table Fields
       ↓
 Logical Record
       ↓
 Record Storage
       ↓
 Page
-Small Example
+```
+
+### Small Example
+
+```python
 record = {
     "id": 101,
     "name": "Aman",
@@ -693,63 +1343,95 @@ record = {
 }
 
 print(record)
+```
 
-This represents a logical record. It is not yet physically stored in a page.
+This represents a logical record.
 
--------------------------------------------------------------------------------------------------------------------- 
+It is not yet physically stored inside a page.
 
-3.2 Record Structure
-What is Record Structure?
+---
+
+# 3.2 Record Structure
+
+## What is Record Structure?
 
 Record Structure defines how the fields of a record are organized and represented.
 
 Example:
 
+```text
 Student Record
 ├── ID
 ├── Name
 └── Age
+```
 
 For:
 
+```text
 101, Aman, 20
+```
 
-the record contains:
+the fields are:
 
-ID → 101
+```text
+ID   → 101
 Name → Aman
-Age → 20
-Why is Record Structure Needed?
+Age  → 20
+```
 
-It helps MyRDB know:
+---
 
-Which fields belong to the record.
-What value each field contains.
-What data type each field has.
-How the record should be serialized.
-How the record should be reconstructed after reading.
-Record Structure vs Record Storage
+## Why Is Record Structure Needed?
+
+MyRDB needs to know:
+
+* Which fields belong to the record.
+* What value each field contains.
+* What data type each field has.
+* How the record should be serialized.
+* How the record should be reconstructed after reading.
+
+---
+
+## Record Structure vs Record Storage
 
 These are different concepts.
 
-Record Structure:
+### Record Structure
 
+```text
 ID = 101
 Name = Aman
 Age = 20
+```
 
-Record Storage:
+This describes the content of the record.
 
+### Record Storage
+
+```text
 Page ID = 0
 Slot ID = 1
 Offset = 120
 Length = 15
+```
+
+This describes where the record is physically stored.
 
 Therefore:
 
-Record Structure describes what the record contains, while Record Storage describes how and where it is stored.
+```text
+Record Structure
+→ What the record contains
 
-MyRDB Flow
+Record Storage
+→ How and where it is stored
+```
+
+### MyRDB Flow
+
+```text
 Table Definition
       ↓
 Record Structure
@@ -759,7 +1441,11 @@ Record Values
 Serialization
       ↓
 Physical Storage
-Small Example
+```
+
+### Small Example
+
+```python
 record = {
     "id": 101,
     "name": "Aman",
@@ -767,18 +1453,25 @@ record = {
 }
 
 print(record["name"])
+```
 
 Output:
 
+```text
 Aman
---------------------------------------------------------------------------------------------------------------------  
+```
 
+---
 
-3.3 Record Serialization
-What is Serialization?
+# 3.3 Record Serialization
+
+## What is Serialization?
 
 Serialization is the process of converting a logical record into a byte representation that can be stored on disk.
 
+### Basic Flow
+
+```text
 Logical Record
       ↓
 Serialization
@@ -786,130 +1479,167 @@ Serialization
 Bytes
       ↓
 Page / Disk
-Why is Serialization Needed?
+```
 
-A database file stores binary data (bytes).
+---
+
+## Why Is Serialization Needed?
+
+A database file stores binary data.
 
 A Python dictionary such as:
 
+```python
 {
     "id": 101,
     "name": "Aman",
     "age": 20
 }
+```
 
 cannot simply be written to the binary page in its Python-object form.
 
 Therefore, MyRDB converts the record into bytes.
 
-Simple Example
+---
+
+## Simple Example
+
+```python
 record = "101,Aman,20"
 
 data = record.encode("utf-8")
 
 print(data)
+```
 
 Output:
 
+```text
 b'101,Aman,20'
+```
 
 The string has been converted into bytes.
 
-Deserialization
+---
+
+## Deserialization
 
 The reverse process is called deserialization.
 
+```text
 Bytes
   ↓
 Deserialization
   ↓
 Logical Record
+```
 
 Example:
 
-data = b'101,Aman,20'
+```python
+data = b"101,Aman,20"
 
 record = data.decode("utf-8")
 
 print(record)
+```
 
 Output:
 
+```text
 101,Aman,20
-Important: Chapter 2 Connection
+```
 
-We already used serialization in Chapter 2 through:
+---
 
-struct.pack()
+## Chapter 2 Connection
 
-and deserialization through:
+Serialization was already introduced in Chapter 2.
 
-struct.unpack()
+### Chapter 2
 
-But Chapter 2 dealt mainly with Page Header serialization.
+```text
+Page Header
+      ↓
+Bytes
+```
 
-Now Chapter 3.3 deals specifically with:
+### Chapter 3
 
-Record → Bytes
-Difference
-Chapter 2	Chapter 3
-Page Header → Bytes	Record → Bytes
-Metadata	Actual row/data
-PageHeader.pack()	Future Record.serialize()
-Fixed header fields	Record fields
-MyRDB Flow
-SQL INSERT
-     ↓
-Parser
-     ↓
-Executor
-     ↓
-Logical Record
-     ↓
-Serialization
-     ↓
-Record Bytes
-     ↓
-Page
-     ↓
-.db File
-Important Note
+```text
+Record
+      ↓
+Bytes
+```
 
-The "101,Aman,20" example is only a simple learning example.
+Therefore:
 
-A real database needs a structured binary format that can correctly handle different data types and variable-length values.
+| Chapter   | Serialization       |
+| --------- | ------------------- |
+| Chapter 2 | Page Header → Bytes |
+| Chapter 3 | Record → Bytes      |
 
--------------------------------------------------------------------------------------------------------------------- 
+---
 
-3.4 Slot Directory
-What is a Slot Directory?
+## Important Note
+
+The `"101,Aman,20"` example is only a simple learning example.
+
+A complete database record format needs a structured binary representation capable of handling:
+
+* Different data types
+* Variable-length values
+* Correct reconstruction
+* Record boundaries
+
+The current implementation provides the foundation for this concept.
+
+---
+
+# 3.4 Slot Directory
+
+## What is a Slot Directory?
 
 A Slot Directory is a structure inside a page that stores the physical location information of records.
 
-It mainly maintains:
+The core relationship is:
 
+```text
 Slot ID → Offset + Length
+```
 
-Example:
+### Example
 
+```text
 Slot 0 → Offset 100, Length 20
 Slot 1 → Offset 120, Length 25
 Slot 2 → Offset 145, Length 18
-Why is Slot Directory Needed?
+```
+
+---
+
+## Why Is Slot Directory Needed?
 
 Records may have different sizes.
 
 For example:
 
+```text
 101, Aman, 20
 102, Rahul, 21
 103, Christopher, 22
+```
 
 The serialized records may occupy different numbers of bytes.
 
 Therefore, MyRDB needs a structure that tells it exactly where every record is located.
 
-Page Layout
+---
+
+## Page Layout
+
+```text
 ┌──────────────────────────────┐
 │         PAGE HEADER          │
 ├──────────────────────────────┤
@@ -929,52 +1659,76 @@ Page Layout
 │ Slot 1 → Offset + Length     │
 │ Slot 2 → Offset + Length     │
 └──────────────────────────────┘
-Slot Entry
+```
 
-A slot entry contains information such as:
+---
 
+## Slot Entry
+
+A slot entry contains location information such as:
+
+```text
 Slot ID
 Offset
 Length
+```
 
 Example:
 
+```text
 Slot ID = 1
 Offset  = 120
 Length  = 25
+```
 
 This means:
 
-The record identified by Slot 1 starts at byte 120 and occupies 25 bytes.
+```text
+The record starts at byte 120
+and occupies 25 bytes.
+```
 
-Offset
+---
 
-Offset = starting byte position of the record inside the page.
+## Offset
+
+Offset is the starting byte position of the record inside the page.
 
 Example:
 
+```text
 Offset = 100
+```
 
 means the record starts at byte 100.
 
-Length
+---
 
-Length = number of bytes occupied by the record.
+## Length
+
+Length is the number of bytes occupied by the record.
 
 Example:
 
-Offset = 100
+```text
 Length = 20
+```
 
-The record occupies:
+means read 20 bytes.
 
-Byte 100 → Byte 119
+Therefore:
 
-So:
+```text
+Offset tells WHERE to start.
 
-Offset tells WHERE to start, and Length tells HOW MANY bytes to read.
+Length tells HOW MANY bytes to read.
+```
 
-Small Example
+---
+
+## Small Example
+
+```python
 slot_directory = [
     {"offset": 100, "length": 20},
     {"offset": 120, "length": 25},
@@ -982,17 +1736,27 @@ slot_directory = [
 ]
 
 print(slot_directory[1])
+```
 
 Output:
 
+```text
 {'offset': 120, 'length': 25}
+```
 
 Here:
 
+```text
 Slot ID = 1
 Offset  = 120
 Length  = 25
-Complete Record Location Flow
+```
+
+---
+
+## Complete Record Location Flow
+
+```text
 Page ID
    ↓
 Slot ID
@@ -1004,126 +1768,382 @@ Record Bytes
 Deserialization
    ↓
 Logical Record
-Key Relationship
+```
+
+### Key Relationship
+
+```text
 Page ID → Slot ID → Offset + Length → Record
+```
 
-This relationship will become very important when we implement INSERT, SELECT, UPDATE, and DELETE.
+This relationship is used throughout record operations.
 
------------------------------------------------------------------------------------------------------------------------
+---
 
-3.5 Slot ID — Summary
-What we learned
-Slot ID is an internal identifier used to identify a record within a page.
-A Slot ID points to a slot entry in the Slot Directory.
-A slot entry contains the record's:
-Offset → where the record starts
-Length → how many bytes the record occupies
+# 3.5 Slot ID
 
-Example:
-Slot 1 → Offset 120, Length 25
+## What is Slot ID?
 
-This means Slot 1's record starts at byte 120 and occupies 25 bytes.
-
-Slot ID is different from Primary Key.
-Primary Key → identifies the logical database record.
-Slot ID → identifies its physical storage entry within a page.
-Slot IDs are page-local.
-Page 0 + Slot 1 and Page 1 + Slot 1 can refer to different records.
-
-When a record is deleted, its slot can become deleted/available instead of shifting all other slots.
+Slot ID is an internal identifier used to identify a record's slot within a page.
 
 Example:
-Before: Slot 0 → A, Slot 1 → B, Slot 2 → C
-After deleting B: Slot 0 → A, Slot 1 → Deleted, Slot 2 → C
 
-A deleted slot can potentially be reused by a future INSERT.
-Most important flow
+```text
+Slot 0 → Record A
+Slot 1 → Record B
+Slot 2 → Record C
+```
 
-Page ID → Slot ID → Slot Entry → Offset + Length → Record Bytes
+A Slot ID points to the corresponding slot entry in the Slot Directory.
 
-One-line definition
+---
 
-Slot ID identifies a record's slot within a page, while the slot entry provides the offset and length needed to locate that record's bytes.
+## Slot ID vs Primary Key
 
---------------------------------------------------------------------------------------------------------------------------------------------------
+Slot ID and Primary Key are different.
 
-3.6 Record Offset & Length — Short Notes
-Record Offset
-Offset = starting byte position of a record inside a page.
-It tells where the record starts.
-Example: Offset = 100 → record starts at byte 100.
-Record Length
-Length = total number of bytes occupied by the record.
-It tells how many bytes to read.
-Example: Length = 20 → read 20 bytes.
-Example
+### Primary Key
 
+Identifies a logical database record.
+
+### Slot ID
+
+Identifies the physical storage entry of that record within a page.
+
+Example:
+
+```text
+Student ID = 101
+Slot ID    = 0
+```
+
+The user understands the Student ID.
+
+The storage engine uses the Slot ID.
+
+---
+
+## Slot IDs Are Page-Local
+
+A Slot ID only has meaning within its page.
+
+For example:
+
+```text
+Page 0 + Slot 1
+```
+
+and:
+
+```text
+Page 1 + Slot 1
+```
+
+can refer to different records.
+
+Therefore, the complete physical reference is:
+
+```text
+Page ID + Slot ID
+```
+
+---
+
+## Slot Behavior During DELETE
+
+Before deletion:
+
+```text
+Slot 0 → A
+Slot 1 → B
+Slot 2 → C
+```
+
+After deleting B:
+
+```text
+Slot 0 → A
+Slot 1 → Deleted / Free
+Slot 2 → C
+```
+
+We do not automatically shift C into Slot 1.
+
+Keeping slot identity stable helps avoid changing existing internal references.
+
+A deleted slot can potentially be reused later.
+
+---
+
+## Most Important Flow
+
+```text
+Page ID
+   ↓
+Slot ID
+   ↓
+Slot Entry
+   ↓
+Offset + Length
+   ↓
+Record Bytes
+```
+
+### One-Line Definition
+
+> Slot ID identifies a record's slot within a page, while the slot entry provides the offset and length needed to locate that record's bytes.
+
+---
+
+# 3.6 Record Offset & Length
+
+## Record Offset
+
+Offset is the starting byte position of a record inside a page.
+
+Example:
+
+```text
+Offset = 100
+```
+
+means the record starts at byte 100.
+
+---
+
+## Record Length
+
+Length is the total number of bytes occupied by the record.
+
+Example:
+
+```text
+Length = 20
+```
+
+means MyRDB should read 20 bytes.
+
+---
+
+## Example
+
+```text
 Slot 1 → Offset = 100, Length = 20
+```
 
-Means:
+This means:
 
+```text
 Start = 100
-Read = 20 bytes
+Read  = 20 bytes
 Range = 100–119
-Important Difference
-Page Offset → where the page starts in the .db file.
-Record Offset → where the record starts inside that page.
-Main Flow
+```
 
-Page ID → Slot ID → Offset + Length → Record Bytes
+---
 
-Offset tells WHERE to start; Length tells HOW MANY bytes to read.
+## Important Difference
 
----------------------------------------------------------------------------------------------------------------------------
-3.7 Free Space Management — Short Notes
-Free Space = unused space available inside a page for storing records.
+### Page Offset
+
+Tells where a page starts in the `.db` file.
+
+```text
+Page Offset = Page ID × PAGE_SIZE
+```
+
+### Record Offset
+
+Tells where a record starts inside that page.
+
+Therefore:
+
+```text
+Page Offset
+     +
+Record Offset
+     =
+Actual File Position
+```
+
+### Example
+
+```text
+Page ID = 5
+PAGE_SIZE = 4096
+
+Page Offset
+= 5 × 4096
+= 20480
+
+Record Offset
+= 100
+
+Actual File Position
+= 20480 + 100
+= 20580
+```
+
+---
+
+## Main Flow
+
+```text
+Page ID
+   ↓
+Slot ID
+   ↓
+Offset + Length
+   ↓
+Record Bytes
+```
+
+### Easy Memory Trick
+
+```text
+Offset → WHERE to start
+
+Length → HOW MANY bytes to read
+```
+
+---
+
+# 3.7 Free Space Management
+
+Free Space is the unused space available inside a page for storing records.
+
 MyRDB must check free space before inserting or updating a record.
+
+---
+
+## Required Space
+
 Required space includes:
-Record size
-Slot entry size
-Example
 
+```text
+Record Size
++
+Slot Entry Size
+```
+
+Therefore:
+
+```text
+Required Space
+=
+Record Size + Slot Entry Size
+```
+
+---
+
+## Example
+
+Suppose:
+
+```text
 Free Space = 500 bytes
-Record = 100 bytes
+Record     = 100 bytes
 Slot Entry = 8 bytes
+```
 
-Required = 100 + 8 = 108 bytes
+Then:
 
-Since 500 ≥ 108, the record can fit.
+```text
+Required = 100 + 8
+         = 108 bytes
+```
 
-If space is insufficient
+Since:
 
-Page 0 → Not enough space → Find/Create another page
+```text
+500 ≥ 108
+```
 
-Free Space Changes
-INSERT → free space decreases
-DELETE → free space can increase
-UPDATE → free space may increase or decrease depending on the new record size
-Main Flow
+the record fits.
 
-INSERT → Check Free Space → Record fits? → Store Record + Slot Entry
+---
 
-Free Space Management determines whether a page has enough space to store or modify a record.
+## If Space Is Insufficient
 
---------------------------------------------------------------------------------------------------------------------
+Suppose:
 
-3.8 Record Insert
+```text
+Free Space = 10 bytes
+Required   = 23 bytes
+```
 
-Now we move from managing space to actually inserting a record into a page.
+The record does not fit.
 
-1. What is Record Insert?
+The storage system can then look for another page.
+
+```text
+Page 0
+   ↓
+Not enough space
+   ↓
+Find/Create another page
+```
+
+---
+
+## Free Space Changes
+
+### INSERT
+
+```text
+Free Space decreases
+```
+
+### DELETE
+
+```text
+Free Space can become reusable
+```
+
+### UPDATE
+
+Free space may:
+
+* Increase
+* Decrease
+* Remain approximately similar
+
+depending on the new serialized record size.
+
+---
+
+## Main Flow
+
+```text
+INSERT
+   ↓
+Check Free Space
+   ↓
+Record Fits?
+   ↓
+Store Record + Slot Entry
+```
+
+Free-space management therefore determines whether a page can accommodate a record operation.
+
+---
+
+# 3.8 Record Insert
 
 Record Insert is the process of storing a new record inside a MyRDB page.
 
-For example, the user executes:
+Example:
 
+```sql
 INSERT INTO Students VALUES (101, 'Aman', 20);
+```
 
-MyRDB eventually needs to store this record physically.
-2. Basic Insert Flow
+MyRDB eventually needs to transform this SQL request into physical record storage.
 
-The overall process is:
+---
 
+## Basic Insert Flow
+
+```text
 INSERT SQL
    ↓
 Parser
@@ -1139,77 +2159,88 @@ Store Record Bytes
 Create Slot Entry
    ↓
 Update Page Metadata
+```
 
-This is an important future flow for our project.
-3. What happens inside the page?
+---
 
-Suppose we have:
+## Step 1 — Create Record
 
-Record = 101, Aman, 20
+Logical record:
 
-After serialization:
-
-Record Bytes
-
-Suppose MyRDB stores these bytes starting at offset 100.
-
-The Slot Directory gets:
-
-Slot 0 → Offset 100, Length 15
-
-So the page now knows:
-
-Slot 0
-   ↓
-Offset 100
-Length 15
-   ↓
-Record Bytes
-4. Insert Steps
-Step 1 — Create Record
-ID = 101
+```text
+ID   = 101
 Name = Aman
-Age = 20
-Step 2 — Serialize
-Record → Bytes
-Step 3 — Check Free Space
+Age  = 20
+```
 
-For example:
+---
 
+## Step 2 — Serialize
+
+```text
+Record
+   ↓
+Bytes
+```
+
+---
+
+## Step 3 — Check Free Space
+
+Example:
+
+```text
 Free Space = 500 bytes
 
-If:
-
-Record = 15 bytes
+Record     = 15 bytes
 Slot Entry = 8 bytes
 
-Then:
+Required   = 23 bytes
+```
 
-Required = 23 bytes
+Since the required space is available, the record can fit.
 
-The record fits.
+---
 
-Step 4 — Store Record
+## Step 4 — Store Record
 
-Record bytes are written into the available area of the page.
+The serialized record bytes are written into available page space.
 
-Step 5 — Create Slot
+Suppose the record starts at:
 
-The Slot Directory gets something like:
+```text
+Offset = 100
+```
 
-Slot 0 → Offset 100, Length 15
+---
 
-Step 6 — Update Metadata
+## Step 5 — Create Slot
 
-The page's metadata must be updated, such as:
+The Slot Directory receives:
 
-Record count
-Free space
-Slot information
-5. Small Example
+```text
+Slot 0 → Offset 100, Length ...
+```
 
-Conceptually:
+The length depends on the serialized record format.
 
+---
+
+## Step 6 — Update Page Metadata
+
+The page metadata needs to reflect the operation.
+
+Relevant information includes:
+
+* Record count
+* Free space
+* Slot information
+
+---
+
+## Small Example
+
+```python
 record = b"101,Aman,20"
 
 offset = 100
@@ -1217,55 +2248,58 @@ length = len(record)
 
 print(offset)
 print(length)
+```
 
-Output:
+The example record occupies 11 bytes.
 
-100
-11
+Therefore conceptually:
 
-So the storage information becomes:
-
+```text
 Slot 0 → Offset 100, Length 11
+```
 
-This is only a small learning example; our actual binary record format will be designed separately.
-6. What if the page is full?
+This is a learning example; the final record format can be more structured.
+
+---
+
+## What If the Page Is Full?
 
 Suppose:
 
+```text
 Free Space = 10 bytes
-
-but:
-
 Required Space = 23 bytes
+```
 
-Then:
+The record cannot fit.
 
-Record does not fit
-        ↓
+The storage engine must then:
+
+```text
 Check another page
         ↓
-If suitable page exists → use it
-        ↓
-Otherwise → create a new page
+Suitable page?
+    ┌───┴───┐
+   Yes      No
+    ↓        ↓
+  Use it   Create Page
+```
 
-This connects directly with 3.7 Free Space Management.
-------------------------------------------------------------------------------------------------------------------
-3.9 Record Read
+This connects record insertion with multi-page storage.
 
-After inserting records, MyRDB needs a way to retrieve a specific record from a page.
+---
 
-This is the basic operation behind SELECT.
+# 3.9 Record Read
 
-1. What is Record Read?
+After records are inserted, MyRDB needs to retrieve them.
 
-Record Read is the process of locating a stored record and converting its bytes back into a usable logical record.
+Record Read is the foundation of future record retrieval operations.
 
-Example:
+---
 
-SELECT * FROM Students;
+## Basic Read Flow
 
-MyRDB needs to:
-
+```text
 Page
  ↓
 Find Slot
@@ -1277,31 +2311,44 @@ Read Record Bytes
 Deserialize
  ↓
 Return Record
-2. How does MyRDB locate the record?
+```
+
+---
+
+## How Does MyRDB Locate a Record?
 
 Suppose the Slot Directory contains:
 
+```text
 Slot 0 → Offset 100, Length 15
+```
 
 MyRDB receives:
 
+```text
 Slot ID = 0
+```
 
 It looks up Slot 0:
 
+```text
 Slot 0
   ↓
 Offset = 100
 Length = 15
-  ↓
-Read 15 bytes starting at byte 100
+```
 
-Then those bytes are deserialized.
+Then it reads:
 
-3. Small Example
+```text
+15 bytes starting at byte 100
+```
 
-Suppose:
+---
 
+## Small Example
+
+```python
 page_data = b"...............101,Aman,20"
 
 offset = 15
@@ -1310,44 +2357,78 @@ length = 11
 record_bytes = page_data[offset:offset + length]
 
 print(record_bytes)
+```
 
 The important operation is:
 
-page_data[offset : offset + length]
+```python
+page_data[offset:offset + length]
+```
 
-It means:
+This means:
 
-Start at the offset and read exactly the record's length.
+```text
+Start at Offset
+Read Length bytes
+```
 
-4. Deserialization
+---
+
+## Deserialization
 
 After reading the bytes:
 
+```text
 Record Bytes
      ↓
 Deserialization
      ↓
 Logical Record
+```
 
-For example:
+Example:
 
-b"101,Aman,20" → 101, Aman, 20
+```text
+b"101,Aman,20"
+       ↓
+101, Aman, 20
+```
 
-Later, our actual MyRDB serializer will use a proper binary format rather than this simple string example.
+---
 
-5. Important Connection
+## INSERT vs READ
 
-Record Read is essentially the reverse of Record Insert.
+### INSERT
 
-INSERT:
+```text
+Record
+   ↓
+Serialize
+   ↓
+Bytes
+   ↓
+Page
+```
 
-Record → Serialize → Bytes → Page
+### READ
 
-READ:
+```text
+Page
+   ↓
+Bytes
+   ↓
+Deserialize
+   ↓
+Record
+```
 
-Page → Bytes → Deserialize → Record
+Therefore, Record Read is essentially the reverse direction of Record Insert.
 
-Main Flow
+---
+
+## Complete Read Flow
+
+```text
 Page ID + Slot ID
         ↓
 Slot Directory
@@ -1359,30 +2440,39 @@ Record Bytes
 Deserialization
         ↓
 Logical Record
-
-Record Read uses the Slot ID, Offset, and Length to locate the exact record bytes and reconstruct the original record.
-----------------------------------------------------------------------------------------------------------------------------------
-# 3.10 Record Update
-
-**Record Update** means modifying an existing record that is already stored in a page.
-
-For example:
-
-`UPDATE Students SET Age = 21 WHERE ID = 101;`
-
-The existing record:
-
-`101, Aman, 20`
-
-becomes:
-
-`101, Aman, 21`
+```
 
 ---
 
-## 1. Basic Update Flow
+# 3.10 Record Update
 
-```text id="z8x4xj"
+Record Update means modifying an existing record already stored in a page.
+
+Example:
+
+```sql
+UPDATE Students
+SET Age = 21
+WHERE ID = 101;
+```
+
+Existing record:
+
+```text
+101, Aman, 20
+```
+
+Updated record:
+
+```text
+101, Aman, 21
+```
+
+---
+
+## Basic Update Flow
+
+```text
 UPDATE SQL
     ↓
 Find Record
@@ -1404,43 +2494,41 @@ Store Updated Record
 Update Slot Entry
 ```
 
-This is another important **future flow** for MyRDB.
-
 ---
 
-## 2. Why is Update More Complicated than Read?
+## Why Is Update More Complicated Than Read?
 
-When a record is updated, its size may change.
+Because the size of the record can change.
 
 Example:
 
-`101, Aman, 20`
+```text
+Old:
+101, Aman, 20
+```
 
-might become:
+could become:
 
-`101, Aman Kumar, 20`
+```text
+101, Aman Kumar, 20
+```
 
-The new record requires more bytes.
+The new record is larger.
 
-So MyRDB cannot blindly overwrite the old record.
-
-It must check:
-
-> **Can the updated record fit in the existing space?**
+Therefore, MyRDB cannot always overwrite the old location blindly.
 
 ---
 
-## 3. Two Common Cases
-
-### Case 1 — New record fits in the existing space
+## Case 1 — New Record Fits
 
 Example:
 
-`Old Length = 20 bytes`
+```text
+Old Length = 20 bytes
+New Length = 18 bytes
+```
 
-`New Length = 18 bytes`
-
-The updated record can potentially use the existing location.
+The new record can potentially use the existing physical location.
 
 ```text
 Old Record
@@ -1454,13 +2542,14 @@ Same location
 
 ---
 
-### Case 2 — New record is larger
+## Case 2 — New Record Is Larger
 
 Example:
 
-`Old Length = 20 bytes`
-
-`New Length = 35 bytes`
+```text
+Old Length = 20 bytes
+New Length = 35 bytes
+```
 
 The old location may not have enough space.
 
@@ -1468,102 +2557,86 @@ Conceptually:
 
 ```text
 Old Record
-   ↓
-New Record is larger
-   ↓
-Find suitable free space
-   ↓
-Store new record there
-   ↓
+    ↓
+New Record Is Larger
+    ↓
+Find Free Space
+    ↓
+Store New Record
+    ↓
 Update Slot Entry
 ```
 
-The Slot ID can remain the logical storage reference while its offset/length is updated.
+The Slot ID can continue to identify the logical storage entry while the slot's offset and length are updated.
 
 ---
 
-## 4. Small Example
+## Small Example
 
 Suppose:
 
-`Slot 0 → Offset 100, Length 15`
+```text
+Slot 0 → Offset 100, Length 15
+```
 
-Old record:
+After an update, the new record may have a different length.
 
-`101,Aman,20`
-
-After update:
-
-`101,Aman,21`
-
-If the new serialized record still fits the available space:
+The Slot Directory can become:
 
 ```text
 Slot 0 → Offset 100, New Length
 ```
 
-The Slot Directory is updated if necessary.
-
----
-
-## 5. Why Slot Directory Matters
-
-Without the Slot Directory, MyRDB would have difficulty knowing exactly where the existing record is.
-
-The process is:
+or, if the record moved:
 
 ```text
-Slot ID
-   ↓
-Offset + Length
-   ↓
-Existing Record
-   ↓
-Update
-   ↓
-New Record
-   ↓
-Updated Offset + Length
+Slot 0 → New Offset, New Length
 ```
 
 ---
 
-## 6. Important Point
+## Important
 
-An update does **not always mean modifying the same physical bytes in place**.
+An UPDATE does not necessarily mean modifying the exact same physical bytes.
 
-Depending on the final storage design:
+Depending on the record size and available page space:
 
-* If the new record fits → it may be updated in place.
-* If it becomes larger → it may need to move to another free location.
-* The Slot Directory can then be updated with the new offset/length.
+* The record may be updated in place.
+* The record may move to another location.
+* The Slot Directory may need to be updated.
 
-We will decide the exact implementation when we build the storage engine.
+---
 
-### Key Definition
-
-> **Record Update modifies an existing record and manages the new serialized size, available space, and Slot Directory information.**
-----------------------------------------------------------------------------------------------------------------------
-
-3.11 Record Delete
+# 3.11 Record Delete
 
 Record Delete is the process of removing an existing record from a page.
 
 Example:
 
-DELETE FROM Students WHERE ID = 101;
+```sql
+DELETE FROM Students
+WHERE ID = 101;
+```
 
-Suppose the page contains:
+Suppose:
 
+```text
 Slot 0 → Offset 100, Length 20
+```
 
-and Slot 0 contains:
+contains:
 
+```text
 101, Aman, 20
+```
 
-After deletion, MyRDB must make that storage available for future use.
+After deletion, MyRDB must make the record no longer active and make its storage available for reuse.
 
-1. Basic Delete Flow
+---
+
+## Basic Delete Flow
+
+```text
 DELETE SQL
    ↓
 Find Record
@@ -1572,142 +2645,141 @@ Page ID + Slot ID
    ↓
 Find Offset + Length
    ↓
-Mark/Remove Record
+Mark / Remove Record
    ↓
 Update Slot
    ↓
-Recover/Mark Free Space
+Mark Space Reusable
    ↓
 Update Page Metadata
-2. What happens to the Slot?
+```
 
-Suppose initially:
+---
 
+## What Happens to the Slot?
+
+Suppose:
+
+```text
 Slot 0 → Record A
 Slot 1 → Record B
 Slot 2 → Record C
+```
 
-We delete Record B.
+Delete Record B.
 
-We generally don't shift Slot 2 into Slot 1 because that could change existing storage references.
+We generally do not shift Record C into Slot 1.
 
 Instead:
 
+```text
 Slot 0 → Record A
-Slot 1 → Deleted/Free
+Slot 1 → Deleted / Free
 Slot 2 → Record C
+```
 
-The slot can later potentially be reused.
+This helps maintain stable internal references.
 
-3. What happens to the Record Bytes?
+---
+
+## What Happens to the Record Bytes?
 
 Suppose:
 
+```text
 Slot 1 → Offset 120, Length 25
+```
 
-After deletion, those 25 bytes are no longer considered a valid active record.
+The record occupies:
 
-Conceptually:
-
-Before:
-
-Offset 120 → Record B
-
-After:
-
-Offset 120 → Free/Unused Space
-
-The exact physical bytes don't necessarily have to be immediately erased.
-
-This is an important concept:
-
-Logical deletion and physical erasure are different things.
-
-MyRDB can mark the record as deleted/free and later reuse that space.
-
-4. What happens to Free Space?
-
-Suppose:
-
-Free Space = 300 bytes
-
-and the deleted record occupied:
-
-25 bytes
-
-Conceptually, available space can increase:
-
-300 + 25 = 325 bytes
-
-However, actual free-space accounting can be more complicated if the page has fragmentation or if the slot directory itself remains allocated.
-
-We will handle the exact implementation during the storage-engine implementation phase.
-
-5. Why not simply remove everything?
-
-Suppose:
-
-Slot 0 → A
-Slot 1 → B
-Slot 2 → C
-
-If B is deleted and we physically shift C:
-
-Slot 0 → A
-Slot 1 → C
-
-then Slot 2 changes/disappears.
-
-That can make existing internal references invalid.
-
-Therefore, keeping the slot identity stable is useful.
-
-6. Slot Reuse
+```text
+120–144
+```
 
 After deletion:
 
-Slot 0 → A
-Slot 1 → Free
-Slot 2 → C
+```text
+120–144
+→ No longer an active record
+→ Storage can become reusable
+```
 
-A future INSERT may reuse Slot 1:
+The physical bytes do not necessarily need to be immediately erased.
 
-Slot 0 → A
-Slot 1 → D
-Slot 2 → C
+---
 
-This avoids unnecessarily creating new slot IDs.
+## Logical Deletion vs Physical Erasure
 
-7. Small Example
+These are two different concepts.
+
+### Logical Deletion
+
+The record is no longer considered valid or visible.
+
+### Physical Space Reclamation
+
+The storage occupied by the record becomes available for reuse.
+
+Therefore:
+
+```text
+Logical Deletion
+        ≠
+Immediate Physical Erasure
+```
+
+---
+
+## Free Space After Delete
 
 Suppose:
 
-Slot 1 → Offset 120, Length 25
+```text
+Free Space = 300 bytes
+Deleted Record = 25 bytes
+```
 
-Delete it:
+Conceptually:
 
-Slot 1 → Deleted/Free
-Offset 120–144 → Space becomes reusable
+```text
+300 + 25 = 325 bytes
+```
 
-Later, a new record may occupy that space.
+However, actual free-space accounting can be more complicated because of:
 
-8. Important: DELETE vs Physical Erasure
+* Fragmentation
+* Slot directory space
+* Existing record layout
 
-A database does not necessarily need to immediately overwrite every deleted byte with zeros.
+Therefore, exact free-space accounting is part of the storage design.
 
-There are two conceptual steps:
+---
 
-Logical deletion:
+## Slot Reuse
 
-Record is no longer considered valid/visible.
+After deletion:
 
-Physical space reclamation:
+```text
+Slot 0 → A
+Slot 1 → Free
+Slot 2 → C
+```
 
-Its storage becomes available for reuse.
+A future INSERT can potentially reuse Slot 1:
 
-These can happen separately.
+```text
+Slot 0 → A
+Slot 1 → D
+Slot 2 → C
+```
 
-Complete MyRDB Delete Flow
+This avoids unnecessary creation of new slot identifiers.
+
+---
+
+## Complete Delete Flow
+
+```text
 DELETE SQL
     ↓
 Parser
@@ -1731,219 +2803,341 @@ Update Slot
 Update Free Space
     ↓
 Update Page Metadata
-Key Point
+```
 
-Record Delete removes a record logically, makes its storage available for reuse, updates the corresponding slot, and maintains correct page/free-space information.
+### Key Definition
 
+> Record Delete removes a record logically, makes its storage available for reuse, updates the corresponding slot, and maintains correct page and free-space information.
 
+---
 
+# 3.12 Testing & Final Implementation
 
+The final Chapter 3 implementation was tested using a complete record lifecycle.
 
+## Test Flow
 
+```text
+Create Page
+    ↓
+Insert Record A
+    ↓
+Insert Record B
+    ↓
+Insert Record C
+    ↓
+Read A
+    ↓
+Read B
+    ↓
+Read C
+    ↓
+Update B
+    ↓
+Read B Again
+    ↓
+Delete A
+    ↓
+Verify A Deleted
+    ↓
+Insert New Record
+    ↓
+Test Slot / Space Handling
+    ↓
+Validate Page
+```
 
-MyRDB — Progress Overview
-Lesson 1 — Foundation & Configuration ✅
-Project Objective
-Project Architecture
-Configuration
-PAGE_SIZE
-PAGE_MAGIC
-FORMAT_VERSION
-Data Directory
-Database Directory
-Database File Extension .db
-Index File Extension .idx
-WAL File
-Backup Directory
-Checkpoint Directory
+---
 
-Lesson 2 — Page & Physical Storage ✅
-Storage Layer Objective
-Page Structure
-Page Layout
-Page Header
-Binary Data
-struct Module
-Page Header Binary Layout
-Struct Format
-Field Sizes
-Endianness
-Little-Endian
-Page Header Implementation
-Page Creation
-Page Initialization
-Page Read
-Page Write
-Page Offset
-Page Validation
-Page Testing
-Corrupted Page Detection
+## Tested Operations
 
-Lesson 3 — Record & Slot Management ✅
-Record Storage Objective
-Record Structure
-Record Serialization
-Record Deserialization
-Slot Directory
-Slot Entry
-Slot ID
-Slot ID vs Primary Key
-Record Offset
-Record Length
-Page Offset vs Record Offset
-Free Space Management
-Record Insert
-Record Read
-Record Update
-Record Delete
-Logical Deletion
-Space Reuse
-Slot Reuse
-Free Space Update
-CRUD Testing
-Invalid Case Testing
-Page Validation After CRUD
-Current Implementation ✅
-config.py
-storage/page_engine.py
-PageHeader
-Page
+### Record Serialization
+
+Record values were converted into stored bytes and reconstructed.
+
+### Record Insert
+
+Multiple records were inserted into the page.
+
+### Record Read
+
+Inserted records were successfully retrieved.
+
+### Record Update
+
+One existing record was modified and read again.
+
+### Record Delete
+
+A record was deleted and the deleted-record behavior was verified.
+
+### New Record
+
+A new record was inserted after deletion.
+
+### Page Validation
+
+The page remained valid after CRUD operations.
+
+---
+
+## Actual Test Result
+
+```text
+=== MyRDB Chapter 3 Test ===
+
+Initial Free Space:
+4080
+
+Inserted Slots:
+0 1 2
+
+Record Count:
+3
+
+Read Records:
+Record(['101', 'Aman', '20'])
+Record(['102', 'Ravi', '21'])
+Record(['103', 'Rahul', '22'])
+
+After Update:
+Record(['102', 'Ravi', '25'])
+
+After Delete:
+Record Count: 2
+Read deleted record: Record has been deleted
+
+New Record Slot:
+3
+
+New Record:
+Record(['104', 'Neha', '23'])
+
+Page Validation:
+True
+
+Final Free Space:
+4019
+
+=== Chapter 3 Test Complete ===
+```
+
+### Result
+
+```text
+INSERT     → PASS
+READ       → PASS
+UPDATE     → PASS
+DELETE     → PASS
+NEW INSERT → PASS
+VALIDATION → PASS
+```
+
+---
+
+# CHAPTER 3 — IMPLEMENTATION RESULT
+
+The Chapter 3 implementation added:
+
+```text
 Record
 Slot Management
 Free Space Management
-Insert / Read / Update / Delete
-Chapter 3 Test Passed
-
-TILL CHAPTER 3 DONE
-
-________________________________________________________________________________________________________________________________________
-
-# Lesson 4 — Storage Engine & Database Management
-
-## Overview
-
-**Goal:** Move MyRDB from **single-page record storage** to a proper **multi-page database storage system**.
-
-### 4.1 Storage Engine Objective
-
-* What is a Storage Engine?
-* Why MyRDB needs one
-* Responsibilities of the Storage Engine
-* Storage Engine vs Page Manager
-
-### 4.2 Multiple Page Management
-
-* Multiple pages per table
-* Page IDs
-* Finding suitable pages
-* Handling full pages
-* Creating new pages
-
-### 4.3 Page Allocation
-
-* How new pages are allocated
-* Page numbering
-* Page availability
-* Page allocation strategy
-
-### 4.4 Page Manager
-
-* Create pages
-* Read pages
-* Write pages
-* Allocate pages
-* Manage page locations
-
-### 4.5 Database Storage
-
-* Database representation
-* Multiple databases
-* Database directory structure
-* Database metadata
-
-### 4.6 Table Storage
-
-* Database → Tables relationship
-* Physical table representation
-* Table metadata
-* Table → Multiple Pages
-
-### 4.7 Database Manager
-
-* Create database
-* Open database
-* List databases
-* Delete database
-* Check database existence
-
-### 4.8 Table Manager
-
-* Create table
-* Open table
-* List tables
-* Delete table
-* Manage table metadata
-
-### 4.9 Persistent Storage
-
-* Store database state on disk
-* Reload databases after restart
-* Restore page/table information
-* Maintain persistent metadata
-
-### 4.10 Multi-Page CRUD
-
-* Insert records across pages
-* Read records from different pages
-* Update records
-* Delete records
-* Handle full pages
-
-### 4.11 Storage Engine Architecture
-
-Connect all components:
-
-```text
-Database
-   ↓
-Table
-   ↓
-Storage Engine
-   ↓
-Page Manager
-   ↓
-Multiple Pages
-   ↓
-Records + Slots
-   ↓
-.db Files
+Insert
+Read
+Update
+Delete
 ```
 
-### 4.12 Testing & Final Implementation
-
-* Multi-page testing
-* Database testing
-* Table testing
-* Persistence testing
-* Multi-page CRUD testing
-* Invalid-case testing
-* Final integration
-
-## Lesson 4 Outcome
-
-By the end of this lesson:
+The main implementation file is:
 
 ```text
-Database
-   ├── Table 1
-   │     ├── Page 0
-   │     ├── Page 1
-   │     └── Page 2
-   │
-   └── Table 2
-         ├── Page 0
-         └── Page 1
+storage/page_engine.py
 ```
 
-MyRDB will have the foundation for managing **multiple databases, tables, pages, and persistent records**.
+The page engine now has a record-level storage foundation.
 
+**Status: ✅ Complete**
+
+### Next
+
+**Chapter 4 — Storage Engine & Database Management**
+
+---
+
+# MYRDB — CURRENT DEVELOPMENT STATE
+
+## Chapter 1
+
+**Foundation & Configuration**
+
+Completed:
+
+* Project foundation
+* Central configuration
+* Page size
+* Page identification
+* Format version
+* Data directory
+* Database extension
+* Index extension
+* WAL path
+* Backup path
+* Checkpoint path
+
+```text
+Status: ✅ Complete
+```
+
+---
+
+## Chapter 2
+
+**Storage & Page Management**
+
+Completed:
+
+* Storage layer
+* Page structure
+* Page header
+* Binary data
+* `struct`
+* Struct format
+* Endianness
+* Page creation
+* Page initialization
+* Page read/write
+* Page offset
+* Page validation
+* Page testing
+
+```text
+Status: ✅ Complete
+```
+
+---
+
+## Chapter 3
+
+**Record & Slot Management**
+
+Completed:
+
+* Record structure
+* Record serialization
+* Record deserialization
+* Slot Directory
+* Slot ID
+* Slot Entry
+* Offset
+* Length
+* Free-space management
+* Record Insert
+* Record Read
+* Record Update
+* Record Delete
+* Logical deletion
+* Space reuse
+* Slot handling
+* CRUD testing
+* Page validation after CRUD
+
+```text
+Status: ✅ Complete
+```
+
+---
+
+# CURRENT CORE FLOW
+
+```text
+Configuration
+      ↓
+Page Storage
+      ↓
+Page Header
+      ↓
+Record Storage
+      ↓
+Slot Directory
+      ↓
+Offset + Length
+      ↓
+Record Bytes
+      ↓
+Physical Storage
+```
+
+## Record Location
+
+```text
+Page ID
+   ↓
+Slot ID
+   ↓
+Slot Entry
+   ↓
+Offset + Length
+   ↓
+Record Bytes
+```
+
+## Record Lifecycle
+
+```text
+INSERT
+   ↓
+Serialize
+   ↓
+Store
+   ↓
+Slot
+   ↓
+READ
+   ↓
+Deserialize
+   ↓
+UPDATE
+   ↓
+DELETE
+   ↓
+Space Reuse
+```
+
+---
+
+# CURRENT PROJECT FILES
+
+```text
+MyRDB/
+│
+├── config.py
+│
+├── main.py
+│
+├── errors.py
+│
+├── README.md
+│
+├── NOTES.txt
+│
+├── data/
+│   └── .gitkeep
+│
+├── engine/
+│   └── __init__.py
+│
+└── storage/
+    ├── __init__.py
+    └── page_engine.py
+```
+
+---
+
+# DOCUMENT UPDATE RULE
+
+This document is maintained as the MyRDB project develops.
+
+New concepts, implementations, tests, architecture flows, and important doubts are added as they are actually covered during development.
+
+The document represents the **current state of MyRDB**, rather than a list of unimplemented features.
