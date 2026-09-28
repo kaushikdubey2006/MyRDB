@@ -1815,3 +1815,135 @@ Insert / Read / Update / Delete
 Chapter 3 Test Passed
 
 TILL CHAPTER 3 DONE
+
+________________________________________________________________________________________________________________________________________
+
+# Lesson 4 — Storage Engine & Database Management
+
+## Overview
+
+**Goal:** Move MyRDB from **single-page record storage** to a proper **multi-page database storage system**.
+
+### 4.1 Storage Engine Objective
+
+* What is a Storage Engine?
+* Why MyRDB needs one
+* Responsibilities of the Storage Engine
+* Storage Engine vs Page Manager
+
+### 4.2 Multiple Page Management
+
+* Multiple pages per table
+* Page IDs
+* Finding suitable pages
+* Handling full pages
+* Creating new pages
+
+### 4.3 Page Allocation
+
+* How new pages are allocated
+* Page numbering
+* Page availability
+* Page allocation strategy
+
+### 4.4 Page Manager
+
+* Create pages
+* Read pages
+* Write pages
+* Allocate pages
+* Manage page locations
+
+### 4.5 Database Storage
+
+* Database representation
+* Multiple databases
+* Database directory structure
+* Database metadata
+
+### 4.6 Table Storage
+
+* Database → Tables relationship
+* Physical table representation
+* Table metadata
+* Table → Multiple Pages
+
+### 4.7 Database Manager
+
+* Create database
+* Open database
+* List databases
+* Delete database
+* Check database existence
+
+### 4.8 Table Manager
+
+* Create table
+* Open table
+* List tables
+* Delete table
+* Manage table metadata
+
+### 4.9 Persistent Storage
+
+* Store database state on disk
+* Reload databases after restart
+* Restore page/table information
+* Maintain persistent metadata
+
+### 4.10 Multi-Page CRUD
+
+* Insert records across pages
+* Read records from different pages
+* Update records
+* Delete records
+* Handle full pages
+
+### 4.11 Storage Engine Architecture
+
+Connect all components:
+
+```text
+Database
+   ↓
+Table
+   ↓
+Storage Engine
+   ↓
+Page Manager
+   ↓
+Multiple Pages
+   ↓
+Records + Slots
+   ↓
+.db Files
+```
+
+### 4.12 Testing & Final Implementation
+
+* Multi-page testing
+* Database testing
+* Table testing
+* Persistence testing
+* Multi-page CRUD testing
+* Invalid-case testing
+* Final integration
+
+## Lesson 4 Outcome
+
+By the end of this lesson:
+
+```text
+Database
+   ├── Table 1
+   │     ├── Page 0
+   │     ├── Page 1
+   │     └── Page 2
+   │
+   └── Table 2
+         ├── Page 0
+         └── Page 1
+```
+
+MyRDB will have the foundation for managing **multiple databases, tables, pages, and persistent records**.
+
