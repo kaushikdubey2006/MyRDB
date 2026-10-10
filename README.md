@@ -6,7 +6,7 @@
 
 The project aims to understand and implement the fundamental internal components of a real database system rather than simply using an existing database engine.
 
-MyRDB provides a **MySQL-like command-line experience and relational database functionality**, while using its own custom storage engine, indexing system, SQL processing layer, transaction system, and database metadata.
+MyRDB is planned to provide a **MySQL-like command-line experience and a Unicode terminal Workbench (TUI)**, backed by its own custom storage engine, indexing system, SQL processing layer, transaction system, and database metadata. Both interfaces will use the same authenticated session and database engine.
 
 > **MyRDB is not a MySQL clone. It is an independently implemented RDBMS prototype with a MySQL-like interface and concepts found in modern relational database systems.**
 
@@ -102,10 +102,10 @@ MyRDB is being developed incrementally, with the goal of supporting a practical 
 
 ### Storage Engine
 
-* Fixed-size 4096-byte pages
-* Binary disk storage
-* Slotted-page record organization
-* Binary serialization using Python `struct`
+* Fixed-size 4096-byte page foundation (implemented)
+* Binary page read/write foundation (implemented)
+* Initial record/slot organization (implemented; persistence reconstruction still incomplete)
+* Page-header binary serialization using Python `struct`
 * Page headers
 * Record slots
 * Tombstone deletion
@@ -184,7 +184,7 @@ MyRDB follows a modular database architecture.
 
 ```text
                  ┌──────────────────────┐
-                 │     CLI / Web UI     │
+                 │   CLI / Terminal TUI │
                  └──────────┬───────────┘
                             ↓
                  ┌──────────────────────┐
@@ -248,7 +248,7 @@ Python's `struct` module is used for controlled binary serialization and deseria
 
 # 🌳 B+ Tree Indexing
 
-MyRDB uses a B+ Tree to provide efficient indexed access.
+MyRDB is planned to use a B+ Tree to provide efficient indexed access.
 
 Conceptually:
 
@@ -272,7 +272,7 @@ The B+ Tree will also maintain linked leaf nodes to support efficient range scan
 
 # 📝 Write-Ahead Logging
 
-MyRDB uses a **Write-Ahead Log (WAL)** for durability and crash recovery.
+MyRDB is planned to use a **Write-Ahead Log (WAL)** for durability and crash recovery.
 
 The basic principle is:
 
@@ -296,7 +296,7 @@ Checkpointing will later reduce the amount of WAL that must be replayed during s
 
 # 🧹 Storage Compaction
 
-Deleted records are initially marked using tombstones instead of immediately reorganizing the entire page.
+The current record-management foundation marks deleted slots rather than immediately reorganizing the entire page. A fully persistent tombstone and compaction design remains to be completed.
 
 Example:
 
@@ -383,20 +383,11 @@ The core database engine does **not** use:
 
 ---
 
-# 🌐 Future Web Workbench
+# 🖥️ Future Terminal Workbench (TUI)
 
-After the core engine is stable, MyRDB will receive a visual management interface.
+After the core engine is stable, MyRDB will receive a Unicode terminal-based Workbench (TUI). The CLI and Workbench will share the same authenticated session and MyRDB engine; database logic will not be duplicated in the interface.
 
-Planned stack:
-
-```text
-HTML
-CSS
-JavaScript
-Flask
-```
-
-The Workbench will provide:
+The TUI will provide:
 
 * SQL editor
 * Query execution
@@ -407,17 +398,23 @@ The Workbench will provide:
 * Storage/page visualization
 * Query execution information
 
-Architecture:
+Startup and interface flow:
 
 ```text
-Browser
+MyRDB
    ↓
-Flask API
+Username + Password
    ↓
-MyRDB SQL Engine
+Authentication
    ↓
+Select Interface
+   ├── CLI
+   └── Workbench (TUI)
+          ↓
+   Same MyRDB Engine
+          ↓
 Storage / Index / Transaction Layers
-   ↓
+          ↓
 Binary Database Files
 ```
 
@@ -427,26 +424,28 @@ Binary Database Files
 
 ### Phase 0 — Foundation
 
-* [ ] Repository setup
-* [ ] Project structure
-* [ ] Configuration system
-* [ ] Error system
-* [ ] CLI foundation
+- [x] Repository setup
+- [x] Project structure
+- [x] Configuration system
+- [x] Error system foundation
+- [ ] CLI foundation
 
 ### Phase 1 — Core RDBMS Engine
 
-* [ ] Binary storage engine
-* [ ] 4096-byte pages
-* [ ] Slotted pages
-* [ ] Record manager
-* [ ] Database manager
-* [ ] Table manager
-* [ ] Schema metadata
-* [ ] B+ Tree
-* [ ] SQL parser
-* [ ] Query executor
-* [ ] Primary/foreign-key constraints
-* [ ] Basic CLI
+- [x] Binary page-storage foundation
+- [x] 4096-byte page structure
+- [x] Page header and validation
+- [x] Initial record/slot CRUD foundation
+- [ ] Persistent slot-directory reconstruction and robust free-space management
+- [ ] Multi-page storage engine
+- [ ] Database manager
+- [ ] Table manager
+- [ ] Schema metadata
+- [ ] B+ Tree
+- [ ] SQL parser
+- [ ] Query executor
+- [ ] Primary/foreign-key constraints
+- [ ] Basic CLI
 
 ### Phase 1.5 — Reliability & Optimization
 
@@ -472,15 +471,15 @@ Binary Database Files
 * [ ] Permissions
 * [ ] Backup/restore
 
-### Phase 2 — Visual Workbench
+### Phase 2 — Terminal Workbench (TUI)
 
-* [ ] Flask API
-* [ ] SQL editor
-* [ ] Result grid
-* [ ] Database explorer
-* [ ] Storage visualizer
-* [ ] B+ Tree visualizer
-* [ ] Query execution information
+- [ ] Unicode terminal interface
+- [ ] SQL editor/input area
+- [ ] Result grid/table rendering
+- [ ] Database explorer
+- [ ] Storage/page visualizer
+- [ ] B+ Tree visualizer
+- [ ] Query execution information
 
 ---
 
@@ -583,11 +582,45 @@ Every major component is implemented and tested before moving to the next layer.
 
 # 📌 Current Status
 
-**Project:** MyRDB
-**Type:** Custom RDBMS Prototype
-**Language:** Python
-**Current Phase:** Foundation / 0%
-**Interface:** CLI first, Web Workbench later
-**Storage:** Custom binary page storage
-**Database Engine:** Built from scratch
+**Project:** MyRDB  
+**Type:** Custom RDBMS Prototype  
+**Language:** Python  
+**Learning Progress:** Chapters 1–3 of 7 completed  
+**Current Focus:** Storage Engine & Database Management (Chapter 4)  
+**Interface Plan:** MySQL-style CLI and Unicode terminal Workbench (TUI), developed after the DBMS core  
+**Storage:** Custom 4096-byte binary page foundation with initial record/slot CRUD  
+**Database Engine:** Built from scratch using Python standard-library components
+
+## Implemented So Far
+
+### Chapter 1 — Foundation & Configuration
+- Central configuration in `config.py`
+- Page size, magic value, and storage format version
+- Database, index, WAL, backup, and checkpoint path definitions
+
+### Chapter 2 — Storage & Page Management
+- Fixed-size page foundation
+- Binary page header using `struct`
+- Explicit Little-Endian header format (`<4sHIHI`)
+- Page creation and binary read/write operations
+- Page validation for size, magic, version, and page ID
+- Invalid-page testing
+
+### Chapter 3 — Record & Slot Management
+- Initial record serialization/deserialization
+- Slot entries containing record offset and length
+- Record insert, read, update, and delete operations
+- Deleted-slot handling and free-space calculations
+- Tests covering CRUD operations and page validation
+
+## Current Implementation Limitations
+
+The current page/record implementation is a learning foundation, not a production-ready storage engine. In particular:
+- Reading a page from disk does not yet fully reconstruct the in-memory slot directory and deleted-slot state.
+- Fragmentation, compaction, and exact free-space accounting need further work.
+- Record serialization is currently simple and does not yet provide a complete typed SQL record format.
+- Multi-page allocation, database/table metadata management, SQL parsing/execution, B+ Tree indexing, transactions, WAL recovery, authentication, and concurrent-session handling are not yet implemented as complete subsystems.
+- The target of roughly 100 concurrent users remains a design/testing goal and must not be treated as verified support until load testing is performed.
+
+The project is being built incrementally. Features listed under planned features and later roadmap phases should not be interpreted as already implemented.
 
