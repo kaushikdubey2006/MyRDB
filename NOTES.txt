@@ -2,7 +2,7 @@
 
 **Project:** MyRDB — Custom Relational Database Management System
 **Language:** Python
-**Current Development:** Chapter 1–3 Completed
+**Current Development:** Chapters 1–3 Completed; Chapter 4.1 Theory Covered
 **Documentation Type:** Live Development Notes
 
 ---
@@ -3145,3 +3145,129 @@ The document represents the **current state of MyRDB**, rather than a list of un
 
 
 EXAM PREPARATION BREAK.....
+
+---
+
+# CHAPTER 4 — STORAGE ENGINE & DATABASE MANAGEMENT
+
+## Chapter Objective
+
+Chapter 4 connects the page-level and record-level foundations developed in Chapters 2 and 3 into a broader storage system.
+
+The goal is to move from working with an individual page to managing operations across multiple pages and database files.
+
+### Chapter 4 Architecture — Target Design
+
+```text
+Database Manager
+        ↓
+Table Manager
+        ↓
+Storage Engine / Page Manager
+        ↓
+Pages and Records
+        ↓
+Database Files on Disk
+```
+
+**Important:** This is the intended architecture. The complete Database Manager, Table Manager, and Storage Engine have not yet been implemented.
+
+---
+
+## 4.1 Storage Engine Objective
+
+### What Is a Storage Engine?
+
+A Storage Engine is the component responsible for coordinating how database data is stored, accessed, updated, and deleted in physical storage.
+
+It connects lower-level page and record operations to broader database storage operations.
+
+### Why Is a Storage Engine Needed?
+
+Chapter 2 established page-level operations, including page creation, reading, writing, and validation.
+
+Chapter 3 added record-level operations, including record insertion, reading, updating, and deletion.
+
+However, a database may contain many records spread across multiple pages. A higher-level component is needed to coordinate these operations instead of treating each page as an isolated object.
+
+For example, if a database contains thousands of records, the storage system needs to find a page with enough free space or arrange for another page to be used.
+
+### Main Responsibilities — Conceptual
+
+- Coordinate record operations with page-level storage.
+- Work with page management to locate suitable pages.
+- Support storage operations across multiple pages.
+- Connect record storage to database files.
+- Provide a foundation for higher-level database and table management.
+
+These are conceptual responsibilities for the planned system; they should not be interpreted as proof that the complete Storage Engine already exists.
+
+### Conceptual Flow
+
+```text
+Database Operation
+(Insert / Read / Update / Delete)
+        ↓
+   Storage Engine
+        ↓
+   Page Management
+        ↓
+  Page and Record Operations
+        ↓
+  Database File on Disk
+```
+
+### Simple Learning Example
+
+The following example demonstrates the basic idea of selecting a page with enough free space. It is a teaching example, not the implemented MyRDB Storage Engine.
+
+```python
+pages = [
+    {"page_id": 0, "free_space": 10},
+    {"page_id": 1, "free_space": 500},
+    {"page_id": 2, "free_space": 300}
+]
+
+required_space = 100
+
+for page in pages:
+    if page["free_space"] >= required_space:
+        print("Selected Page:", page["page_id"])
+        break
+```
+
+Output:
+
+```text
+Selected Page: 1
+```
+
+Page 0 has only 10 bytes available, so it cannot fit the requested 100 bytes. Page 1 has enough free space and is selected.
+
+In a real implementation, the required space must account for the record and any required slot-directory entry. The system must also handle the case where no existing page has enough space.
+
+### Difference Between Related Components
+
+| Component | Main responsibility |
+|---|---|
+| Page | Holds page data and metadata |
+| Record Management | Handles individual records |
+| Page Manager | Finds, allocates, and coordinates pages |
+| Storage Engine | Coordinates broader storage operations across pages and files |
+
+The exact module boundaries will be finalized during implementation.
+
+### Connection to Existing MyRDB Files
+
+- `config.py` defines storage settings, including `PAGE_SIZE = 4096`.
+- `storage/page_engine.py` contains the page and record storage foundation developed in earlier chapters.
+- Chapter 4 is intended to build on these components rather than replace them.
+
+### Chapter 4.1 Summary
+
+- A Storage Engine coordinates storage-related operations.
+- Page-level and record-level operations already provide the foundation.
+- Page management is needed to work across multiple pages.
+- The complete Storage Engine is not implemented yet.
+- No new project code or tests were completed in this theory-only subtopic.
+
