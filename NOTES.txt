@@ -3263,11 +3263,3 @@ The exact module boundaries will be finalized during implementation.
 - `storage/page_engine.py` contains the page and record storage foundation developed in earlier chapters.
 - Chapter 4 is intended to build on these components rather than replace them.
 
-### Chapter 4.1 Summary
-
-- A Storage Engine coordinates storage-related operations.
-- Page-level and record-level operations already provide the foundation.
-- Page management is needed to work across multiple pages.
-- The complete Storage Engine is not implemented yet.
-- No new project code or tests were completed in this theory-only subtopic.
-
