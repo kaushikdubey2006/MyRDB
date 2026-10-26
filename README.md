@@ -436,7 +436,7 @@ Binary Database Files
 - [x] 4096-byte page structure
 - [x] Page header and validation
 - [x] Initial record/slot CRUD foundation
-- [] Persistent slot-directory reconstruction and robust free-space management
+- [ ] Persistent slot-directory reconstruction and robust free-space management
 - [ ] Multi-page storage engine
 - [ ] Database manager
 - [ ] Table manager
