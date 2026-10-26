@@ -622,5 +622,7 @@ The current page/record implementation is a learning foundation, not a productio
 - Multi-page allocation, database/table metadata management, SQL parsing/execution, B+ Tree indexing, transactions, WAL recovery, authentication, and concurrent-session handling are not yet implemented as complete subsystems.
 - The target of roughly 100 concurrent users remains a design/testing goal and must not be treated as verified support until load testing is performed.
 
-The project is being built incrementally. Features listed under planned features and later roadmap phases should not be interpreted as already implemented.
+The project is being built incrementally. Features listed under planned features and later roadmap phases should not be interpreted as already implemented..
+ 
+
 
