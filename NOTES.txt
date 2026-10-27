@@ -1951,3 +1951,43 @@ Page Allocation Design Considerations
 6. If multiple operations can allocate pages at the same time, allocation must be coordinated to avoid assigning the same page ID twice.
 
 These are design requirements to verify during implementation, not features already proven by the current tests.
+
+----------
+4.4 Database files & Persistent page Storage
+1. Database File
+A database file (.db) stores database pages on a storage device. Multiple fixed-size pages can be stored in a single file.
+
+Example: college.db
+2. Persistent Page Storage
+Persistent storage means saving page data to non-volatile storage so that it remains available after the application closes or the system restarts.
+- MyRDB page size: 4096 bytes (4 KB).
+- Each page contains a header, slot-directory information, and record data.
+- Page offset = Page ID × PAGE_SIZE.
+3. Writing Pages to a File
+The basic process is:
+Create Page in Memory
+        ↓
+Serialize Data into Bytes
+        ↓
+Write Page to .db File
+        ↓
+Data Stored on Disk
+
+
+- wb: Opens a file for writing and truncates existing contents.
+- r+b: Reads and writes an existing file without truncating it.
+4. Crash and Power Failure
+- Data safely persisted to storage normally survives a crash.
+- Data present only in RAM may be lost.
+- A crash during writing may leave incomplete or corrupted data.
+- file.flush() sends buffered data to the operating system.
+- os.fsync() requests synchronization of file data and metadata to storage.
+5. WAL and Crash Recovery
+Write-Ahead Logging (WAL) records changes before corresponding database pages are written, enabling recovery after interrupted operations.
+Write WAL → Persist Log → Update Page → Recover After Crash
+
+
+MyRDB Implementation Status
+Page-level reading and writing exist from earlier chapters. However, complete page-metadata reconstruction, WAL, and crash recovery still require implementation and testing.
+
+Key difference: The database file stores pages; persistent storage preserves saved data; WAL helps recover a consistent state after a crash.
