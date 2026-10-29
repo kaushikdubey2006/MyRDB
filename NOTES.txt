@@ -1991,3 +1991,38 @@ MyRDB Implementation Status
 Page-level reading and writing exist from earlier chapters. However, complete page-metadata reconstruction, WAL, and crash recovery still require implementation and testing.
 
 Key difference: The database file stores pages; persistent storage preserves saved data; WAL helps recover a consistent state after a crash.
+------------
+## 4.5 Database and Table Management
+
+ Database: A logical collection that organizes tables.
+ Table: Stores related records in rows and columns.
+
+ Why MyRDB needs management:
+
+- Identify databases and tables.
+- Maintain table structure and data types.
+- Map table names to their storage files.
+- Handle nonexistent databases or tables.
+
+ Example structure:
+
+```
+data/databases/college/
+├── students.db
+└── teachers.db
+```
+
+ Query flow:
+
+```
+SELECT * FROM students;
+        ↓
+Identify Database & Table
+        ↓
+Locate .db File
+        ↓
+Read Pages → Return Records
+```
+
+Key point: Database and table management connects logical SQL names to physical storage. Full implementation is still pending.
+--------------
