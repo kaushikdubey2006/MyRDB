@@ -2004,13 +2004,7 @@ Key difference: The database file stores pages; persistent storage preserves sav
 - Map table names to their storage files.
 - Handle nonexistent databases or tables.
 
- Example structure:
 
-```
-data/databases/college/
-├── students.db
-└── teachers.db
-```
 
  Query flow:
 
