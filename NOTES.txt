@@ -2020,3 +2020,13 @@ Read Pages → Return Records
 
 Key point: Database and table management connects logical SQL names to physical storage. Full implementation is still pending.
 --------------
+### 4.6 Finding a Page with Free Space
+
+Finding a page with free space means identifying an existing database page that has enough usable space to store a new record and its slot-directory entry.
+
+MyRDB checks the available free space of existing pages and compares it with the required space. If a suitable page is found, the record is inserted there. If no page has sufficient space, a new page may need to be allocated.
+
+Flow: Insert Request → Check Free Space → Select Suitable Page → Insert Record.
+
+MyRDB status: Automatic free-space searching across multiple pages still needs implementation and testing.
+----------------------
