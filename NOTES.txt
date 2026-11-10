@@ -2131,3 +2131,34 @@ WHERE name = 'Ravi';
 
 If Ravi's record is on Page 1, MyRDB locates Page 1 and updates his age.
 ----------------------
+## 4.10 Delete Record Across Pages
+
+Meaning: Deleting a record stored on any page of a table.
+
+Why is it needed?
+
+Records may exist on different pages. MyRDB must locate the target record before deleting it.
+
+### Working
+
+```
+DELETE Request
+      ↓
+Identify Table
+      ↓
+Find Target Record
+      ↓
+Mark Record as Deleted
+      ↓
+Update Page Metadata
+```
+
+### Example
+
+```
+DELETE FROM students
+WHERE name = 'Ravi';
+```
+
+If Ravi's record is on Page 1, MyRDB locates that page and deletes the record.
+-----------------------
