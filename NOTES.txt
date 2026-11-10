@@ -2030,3 +2030,35 @@ Flow: Insert Request → Check Free Space → Select Suitable Page → Insert Re
 
 MyRDB status: Automatic free-space searching across multiple pages still needs implementation and testing.
 ---------------------
+4.7 Insert Across Multiple Pages
+Meaning: Inserting records into different pages of a table when the current page does not have enough free space.
+Why is it needed?
+MyRDB uses fixed-size pages of 4096 bytes. When a page becomes full, the engine must find another suitable page or allocate a new one.
+Working
+INSERT Request
+      ↓
+Find Page with Free Space
+      ↓
+Space Available?
+   /       \
+ Yes        No
+  ↓          ↓
+Insert    Check Next Page
+Record       ↓
+          No Page Fits?
+              ↓
+         Allocate New Page
+              ↓
+         Insert Record
+
+
+Example
+Page ID	Free space
+0	100 bytes
+1	50 bytes
+2	300 bytes
+
+If a record requires 200 bytes, MyRDB selects Page 2.
+MyRDB Connection
+This topic combines page management, free-space searching, page allocation, and record insertion to store records across multiple pages.
+-------------
