@@ -2099,3 +2099,35 @@ SELECT * FROM students;
 MyRDB reads records from all three pages and return the records.
 
 ------------------
+## 4.9 Update Record Across Pages
+
+Meaning: Updating a record stored on any page of a table.
+
+Why is it needed?
+
+Records may be distributed across multiple pages. MyRDB must locate the correct record before modifying it.
+
+### Working
+
+```
+UPDATE Request
+      ↓
+Identify Table
+      ↓
+Find Target Record
+      ↓
+Update Record
+      ↓
+Save Page Changes
+```
+
+### Example
+
+```
+UPDATE students
+SET age = 22
+WHERE name = 'Ravi';
+```
+
+If Ravi's record is on Page 1, MyRDB locates Page 1 and updates his age.
+----------------------
