@@ -2162,3 +2162,25 @@ WHERE name = 'Ravi';
 
 If Ravi's record is on Page 1, MyRDB locates that page and deletes the record.
 -----------------------
+4.11 Page Persistence
+Meaning: Page persistence means saving database pages permanently to non-volatile storage so that their data remains available after the application closes or the system restarts.
+
+Why is it needed?
+
+Data stored only in RAM may be lost when the application or system stops. Persistent storage helps preserve saved database records.
+Working
+Page in Memory (RAM)
+        ↓
+Write Page to .db File
+        ↓
+Flush File Buffer
+        ↓
+os.fsync()
+        ↓
+Data Persisted to Storage
+
+
+Example
+MyRDB uses 4096-byte pages. When Page 0 is successfully persisted in students.db, its saved contents can be read again after restarting the application.
+
+Important: file.flush() and os.fsync() help ensure data reaches storage, but crash-safe database recovery also requires mechanisms such as WAL.
