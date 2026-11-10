@@ -2062,3 +2062,40 @@ If a record requires 200 bytes, MyRDB selects Page 2.
 MyRDB Connection
 This topic combines page management, free-space searching, page allocation, and record insertion to store records across multiple pages.
 -------------
+## 4.8 Read Record Across Pages
+
+Meaning: Reading records from multiple pages when a table's data is distributed across different database pages.
+
+### Why is it needed?
+
+A table may contain more records than one 4096-byte page can store. Therefore, MyRDB must read records from multiple pages.
+
+### Working
+
+```
+SELECT Request
+      ↓
+Identify Table
+      ↓
+Access Table Pages
+      ↓
+Read Records from Each Page
+      ↓
+Return Results
+```
+
+### Example
+
+| Page ID | Records      |
+| ------- | ------------ |
+| 0       | Aman, Ravi   |
+| 1       | Neha, Rahul  |
+| 2       | Priya, Karan |
+
+```
+SELECT * FROM students;
+```
+
+MyRDB reads records from all three pages and return the records.
+
+------------------
