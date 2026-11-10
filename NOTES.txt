@@ -2184,3 +2184,4 @@ Example
 MyRDB uses 4096-byte pages. When Page 0 is successfully persisted in students.db, its saved contents can be read again after restarting the application.
 
 Important: file.flush() and os.fsync() help ensure data reaches storage, but crash-safe database recovery also requires mechanisms such as WAL.
+-----------------
