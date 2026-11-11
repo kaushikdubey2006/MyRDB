@@ -44,121 +44,122 @@ MyRDB is being developed incrementally, with the goal of supporting a practical 
 
 ### Database Management
 
-* Multiple databases
-* Database creation and deletion
-* Database selection
-* Database metadata
-* Multiple tables per database
+- Multiple databases
+- Database creation and deletion
+- Database selection
+- Database metadata
+- Multiple tables per database
 
 ### Table & Schema Management
 
-* `CREATE TABLE`
-* `DROP TABLE`
-* `ALTER TABLE`
-* Column definitions
-* Data types
-* Primary Keys
-* Foreign Keys
-* `NOT NULL`
-* `UNIQUE`
-* `DEFAULT`
-* `CHECK`
-* Auto-increment support
+- `CREATE TABLE`
+- `DROP TABLE`
+- `ALTER TABLE`
+- Column definitions
+- Data types
+- Primary Keys
+- Foreign Keys
+- `NOT NULL`
+- `UNIQUE`
+- `DEFAULT`
+- `CHECK`
+- Auto-increment support
 
 ### SQL Query Processing
 
-* `INSERT`
-* `SELECT`
-* `UPDATE`
-* `DELETE`
-* `WHERE`
-* Multiple conditions
-* `AND` / `OR`
-* `ORDER BY`
-* `GROUP BY`
-* `HAVING`
-* `LIMIT`
-* Aggregate functions
-* `COUNT`
-* `SUM`
-* `MAX`
-* `MIN`
-* `AVG`
+- `INSERT`
+- `SELECT`
+- `UPDATE`
+- `DELETE`
+- `WHERE`
+- Multiple conditions
+- `AND` / `OR`
+- `ORDER BY`
+- `GROUP BY`
+- `HAVING`
+- `LIMIT`
+- Aggregate functions
+- `COUNT`
+- `SUM`
+- `MAX`
+- `MIN`
+- `AVG`
 
 ### Joins
 
-* `INNER JOIN`
-* `LEFT JOIN`
-* Additional practical join support as the query engine evolves
+- `INNER JOIN`
+- `LEFT JOIN`
+- Additional practical join support as the query engine evolves
 
 ### Indexing
 
-* B+ Tree index
-* Primary-key indexing
-* Secondary indexes
-* O(log N) index lookup
-* Range scans
-* Linked B+ Tree leaves
+- B+ Tree index
+- Primary-key indexing
+- Secondary indexes
+- O(log N) index lookup
+- Range scans
+- Linked B+ Tree leaves
 
 ### Storage Engine
 
-* Fixed-size 4096-byte page foundation (implemented)
-* Binary page read/write foundation (implemented)
-* Initial record/slot organization (implemented; persistence reconstruction still incomplete)
-* Page-header binary serialization using Python `struct`
-* Page headers
-* Record slots
-* Tombstone deletion
-* Page allocation
-* Disk persistence
-* `fsync()` based durability
+- Fixed-size 4096-byte pages (implemented and tested)
+- Binary page read/write using Python `struct` (implemented and tested)
+- Persistent slot-directory reconstruction after reload (implemented and tested)
+- Record insert, read, update, and delete operations (implemented)
+- Tombstone deletion and deleted-slot reuse (implemented)
+- Multi-page allocation and record relocation (implemented and tested)
+- Free-space tracking and reconstruction after reload (implemented and tested)
+- Record compaction (implemented and tested)
+- Empty-page reuse, including after reload (implemented and tested)
+- Page structure and metadata validation (implemented and tested)
+- `flush()` based file writing; `fsync()` durability is not implemented yet
 
 ### Transactions & Reliability
 
-* `BEGIN`
-* `COMMIT`
-* `ROLLBACK`
-* Savepoints
-* Write-Ahead Logging (WAL)
-* Crash recovery
-* WAL replay
-* Checkpointing
-* Transaction-aware storage operations
+- `BEGIN`
+- `COMMIT`
+- `ROLLBACK`
+- Savepoints
+- Write-Ahead Logging (WAL)
+- Crash recovery
+- WAL replay
+- Checkpointing
+- Transaction-aware storage operations
 
 ### Concurrency
 
-* Multiple client/session support
-* Locking mechanisms
-* Table/row-level locking where practical
-* Basic transaction isolation
-* Deadlock handling where practical
+- Multiple client/session support
+- Locking mechanisms
+- Table/row-level locking where practical
+- Basic transaction isolation
+- Deadlock handling where practical
 
 ### Database Programmability
 
-* Views
-* Stored procedures
-* Functions
-* Triggers
-* Events where practical
+- Views
+- Stored procedures
+- Functions
+- Triggers
+- Events where practical
 
 ### Security
 
-* User accounts
-* Authentication
-* Password hashing
-* Roles
-* Permissions
-* `GRANT`
-* `REVOKE`
+- User accounts
+- Authentication
+- Password hashing
+- Roles
+- Permissions
+- `GRANT`
+- `REVOKE`
 
 ### Maintenance & Administration
 
-* `VACUUM`
-* Storage compaction
-* Checkpoints
-* Database status
-* Metadata inspection
-* Error reporting
+- `VACUUM`
+- Storage compaction
+- Checkpoints
+- Database status
+- Metadata inspection
+- Error reporting
 
 ### Backup & Recovery
 
@@ -168,7 +169,7 @@ MyRDB will provide a simple command-based backup mechanism, for example:
 /BACKUP college backup_01
 ```
 
-and restoration:
+And restoration:
 
 ```text
 /RESTORE backup_01
@@ -213,10 +214,10 @@ MyRDB follows a modular database architecture.
                  └──────────┬───────────┘
                             ↓
                  ┌──────────────────────┐
-                 │    Binary Pages     │
+                 │    Binary Pages      │
                  └──────────┬───────────┘
                             ↓
-                         Disk
+                           Disk
 ```
 
 ---
@@ -243,6 +244,17 @@ Each database file is divided into fixed-size pages:
 Records are stored in binary form rather than as plain text or JSON.
 
 Python's `struct` module is used for controlled binary serialization and deserialization.
+
+The storage engine currently supports:
+
+- Page creation and binary persistence.
+- Slot-directory reconstruction after loading pages.
+- Multi-page record management.
+- Tombstone deletion and deleted-slot reuse.
+- Free-space tracking.
+- Record relocation.
+- Page compaction.
+- Empty-page reuse.
 
 ---
 
@@ -296,7 +308,13 @@ Checkpointing will later reduce the amount of WAL that must be replayed during s
 
 # 🧹 Storage Compaction
 
-The current record-management foundation marks deleted slots rather than immediately reorganizing the entire page. A fully persistent tombstone and compaction design remains to be completed.
+MyRDB currently uses tombstones for deletion. `Page.compact()` reorganizes active records into contiguous storage while preserving active slot IDs.
+
+`PageManager.compact_all_pages()` applies compaction across the loaded pages.
+
+Compaction and page-reuse behavior have dedicated tests.
+
+A higher-level `VACUUM` command and transaction-safe maintenance are still future work.
 
 Example:
 
@@ -314,15 +332,13 @@ After:
 [Record A] [DELETED] [Record C]
 ```
 
-A future `VACUUM` operation can compact the storage and reclaim unused space.
-
 ---
 
 # 🖥️ MySQL-Like CLI
 
-The first interface is a terminal-based SQL shell.
+The first interface is planned as a terminal-based SQL shell.
 
-Example:
+Example of the intended interaction:
 
 ```text
 MyRDB Server
@@ -356,8 +372,8 @@ The interface is intentionally similar to familiar SQL database shells, while th
 
 ## Core Engine
 
-* Python
-* Python Standard Library
+- Python
+- Python Standard Library
 
 Important modules include:
 
@@ -374,29 +390,31 @@ secrets     → secure random values
 
 The core database engine does **not** use:
 
-* SQLite
-* MySQL Connector
-* PostgreSQL
-* SQLAlchemy
-* ORM frameworks
-* External database engines
+- SQLite
+- MySQL Connector
+- PostgreSQL
+- SQLAlchemy
+- ORM frameworks
+- External database engines
 
 ---
 
 # 🖥️ Future Terminal Workbench (TUI)
 
-After the core engine is stable, MyRDB will receive a Unicode terminal-based Workbench (TUI). The CLI and Workbench will share the same authenticated session and MyRDB engine; database logic will not be duplicated in the interface.
+After the core engine is stable, MyRDB will receive a Unicode terminal-based Workbench (TUI).
+
+The CLI and Workbench will share the same authenticated session and MyRDB engine. Database logic will not be duplicated in the interface.
 
 The TUI will provide:
 
-* SQL editor
-* Query execution
-* Result tables
-* Database explorer
-* Table explorer
-* Index information
-* Storage/page visualization
-* Query execution information
+- SQL editor
+- Query execution
+- Result tables
+- Database explorer
+- Table explorer
+- Index information
+- Storage/page visualization
+- Query execution information
 
 Startup and interface flow:
 
@@ -411,7 +429,7 @@ Select Interface
    ├── CLI
    └── Workbench (TUI)
           ↓
-   Same MyRDB Engine
+    Same MyRDB Engine
           ↓
 Storage / Index / Transaction Layers
           ↓
@@ -435,12 +453,14 @@ Binary Database Files
 - [x] Binary page-storage foundation
 - [x] 4096-byte page structure
 - [x] Page header and validation
-- [x] Initial record/slot CRUD foundation
-- [ ] Persistent slot-directory reconstruction and robust free-space management
-- [ ] Multi-page storage engine
-- [ ] Database manager
-- [ ] Table manager
-- [ ] Schema metadata
+- [x] Record/slot CRUD foundation
+- [x] Persistent slot-directory reconstruction
+- [x] Free-space tracking and reconstruction
+- [x] Record compaction and deleted-slot reuse
+- [x] Multi-page storage engine and record relocation
+- [x] Empty-page reuse
+- [ ] Database manager and multiple-database metadata
+- [ ] Table manager and schema metadata
 - [ ] B+ Tree
 - [ ] SQL parser
 - [ ] Query executor
@@ -449,27 +469,27 @@ Binary Database Files
 
 ### Phase 1.5 — Reliability & Optimization
 
-* [ ] WAL
-* [ ] Crash recovery
-* [ ] Checkpointing
-* [ ] VACUUM
-* [ ] Query optimization
-* [ ] Aggregations
-* [ ] Multi-condition queries
-* [ ] Secondary indexes
+- [ ] WAL
+- [ ] Crash recovery
+- [ ] Checkpointing
+- [ ] VACUUM
+- [ ] Query optimization
+- [ ] Aggregations
+- [ ] Multi-condition queries
+- [ ] Secondary indexes
 
 ### Phase 1.5+ — Advanced RDBMS Features
 
-* [ ] Transactions
-* [ ] Concurrency control
-* [ ] Views
-* [ ] Procedures
-* [ ] Functions
-* [ ] Triggers
-* [ ] Users
-* [ ] Roles
-* [ ] Permissions
-* [ ] Backup/restore
+- [ ] Transactions
+- [ ] Concurrency control
+- [ ] Views
+- [ ] Procedures
+- [ ] Functions
+- [ ] Triggers
+- [ ] Users
+- [ ] Roles
+- [ ] Permissions
+- [ ] Backup/restore
 
 ### Phase 2 — Terminal Workbench (TUI)
 
@@ -487,22 +507,22 @@ Binary Database Files
 
 This project is designed to provide hands-on understanding of:
 
-* Database internals
-* RDBMS architecture
-* Data structures
-* B+ Trees
-* Disk-based storage
-* Binary serialization
-* File systems
-* Query processing
-* Query optimization
-* Transactions
-* Concurrency
-* Crash recovery
-* Database security
-* SQL parsing
-* Backend architecture
-* Systems engineering
+- Database internals
+- RDBMS architecture
+- Data structures
+- B+ Trees
+- Disk-based storage
+- Binary serialization
+- File systems
+- Query processing
+- Query optimization
+- Transactions
+- Concurrency
+- Crash recovery
+- Database security
+- SQL parsing
+- Backend architecture
+- Systems engineering
 
 The project is intentionally developed incrementally so that every major component is understood before implementation.
 
@@ -517,20 +537,25 @@ MyRDB/
 ├── errors.py
 ├── main.py
 ├── README.md
-├── NOTES.txt
 │
-├── storage/
-│   ├── __init__.py
-│   └── page_engine.py
+├── Storage/
+│   ├── page_engine.py
+│   └── page_manager.py
 │
 ├── engine/
 │   └── __init__.py
+│
+├── test_storage_engine.py
+├── test_record_compaction.py
+├── test_free_space_management.py
+├── test_page_reuse.py
+├── test_storage_stress.py
 │
 └── data/
     └── .gitkeep
 ```
 
-The structure will expand as additional database subsystems are implemented.
+This is a high-level view of the current repository structure. Additional configuration, test, and data files may exist.
 
 ---
 
@@ -551,6 +576,24 @@ Some advanced features will be implemented in simplified but practical forms. Th
 7. Performance awareness
 
 over attempting to reproduce the complete complexity of a production database.
+
+## Current Implementation Limitations
+
+Chapter 4's planned storage-engine scope has been implemented and tested, but MyRDB is still an educational RDBMS prototype rather than a production database.
+
+Known limitations include:
+
+- **Simple record format:** Records are currently encoded as UTF-8 values separated by `|`. The delimiter is not escaped, and deserialization returns values as strings. A typed SQL record format is still needed.
+- **Durability:** `PageManager.save_page()` writes and flushes page data, but it does not currently call `os.fsync()`. WAL-based crash recovery and transaction atomicity are not implemented.
+- **Update atomicity:** When an update requires relocation, the new record is written before the old record is deleted. This is not crash-atomic and will need transaction/WAL protection later.
+- **Locator identity:** A `(page_id, slot_id)` locator can become stale when a deleted slot or empty page is reused. The future index layer must account for this, for example with record identifiers or slot generations.
+- **Database and schema layer:** Multiple-database management, table management, schema metadata, SQL parsing, query execution, and constraints are not yet complete subsystems.
+- **Indexing:** B+ Tree indexing, primary-key indexes, secondary indexes, and range scans remain planned work.
+- **Reliability and concurrency:** WAL, crash recovery, checkpointing, transaction isolation, locking, and concurrent-session support remain future work.
+- **Interfaces and security:** The MySQL-like CLI, Unicode TUI, authentication, roles, and permissions remain planned features.
+- **Concurrency target:** The design goal of approximately 100 concurrent users has not been load-tested and must not be treated as verified support.
+
+Features in the planned-feature sections describe project goals; they should not be interpreted as already implemented unless explicitly marked as implemented.
 
 ---
 
@@ -585,44 +628,49 @@ Every major component is implemented and tested before moving to the next layer.
 **Project:** MyRDB  
 **Type:** Custom RDBMS Prototype  
 **Language:** Python  
-**Learning Progress:** Chapters 1–3 of 7 completed  
-**Current Focus:** Storage Engine & Database Management (Chapter 4)  
+**Learning Progress:** Chapters 1–4 of 7 completed  
+**Current Focus:** Chapter 5 — SQL Engine & Indexing  
+**Latest Git checkpoint:** `4b606d7` — `Complete Chapter 4 storage engine improvements`  
 **Interface Plan:** MySQL-style CLI and Unicode terminal Workbench (TUI), developed after the DBMS core  
-**Storage:** Custom 4096-byte binary page foundation with initial record/slot CRUD  
-**Database Engine:** Built from scratch using Python standard-library components
+**Storage:** 4096-byte binary pages, persistent slot reconstruction, multi-page storage, CRUD, relocation, compaction, free-space tracking, and empty-page reuse  
+**Database Engine:** Custom Python implementation using the standard library; no external database engine
 
 ## Implemented So Far
 
 ### Chapter 1 — Foundation & Configuration
+
 - Central configuration in `config.py`
 - Page size, magic value, and storage format version
 - Database, index, WAL, backup, and checkpoint path definitions
 
 ### Chapter 2 — Storage & Page Management
-- Fixed-size page foundation
-- Binary page header using `struct`
-- Explicit Little-Endian header format (`<4sHIHI`)
+
+- Fixed-size 4096-byte page structure
+- Binary page header using Python `struct`
+- Explicit Little-Endian header format: `<4sHIHI`
 - Page creation and binary read/write operations
 - Page validation for size, magic, version, and page ID
-- Invalid-page testing
+- Invalid-page validation tests
 
 ### Chapter 3 — Record & Slot Management
-- Initial record serialization/deserialization
+
+- Record serialization and deserialization foundation
 - Slot entries containing record offset and length
 - Record insert, read, update, and delete operations
-- Deleted-slot handling and free-space calculations
-- Tests covering CRUD operations and page validation
+- Tombstone deletion and deleted-slot tracking
+- Free-space calculations and deleted-slot reuse
+- Slot-directory reconstruction after loading pages from disk
 
-## Current Implementation Limitations
+### Chapter 4 — Storage Engine & Page Management
 
-The current page/record implementation is a learning foundation, not a production-ready storage engine. In particular:
-- Reading a page from disk does not yet fully reconstruct the in-memory slot directory and deleted-slot state.
-- Fragmentation, compaction, and exact free-space accounting need further work.
-- Record serialization is currently simple and does not yet provide a complete typed SQL record format.
-- Multi-page allocation, database/table metadata management, SQL parsing/execution, B+ Tree indexing, transactions, WAL recovery, authentication, and concurrent-session handling are not yet implemented as complete subsystems.
-- The target of roughly 100 concurrent users remains a design/testing goal and must not be treated as verified support until load testing is performed.
+- Multi-page storage with automatic page allocation
+- Record relocation when an update cannot fit on its original page
+- Free-space map maintained in memory and rebuilt from persisted pages on reload
+- Empty-page detection and reuse, including after reload
+- Page compaction and compaction across all pages
+- Page metadata validation
+- Persistence tests after reload
+- Integration tests covering multi-page CRUD and relocation
+- Stress test covering 500 inserted records, 20 larger updates, deletions, compaction, page reuse, and reload verification
 
-The project is being built incrementally. Features listed under planned features and later roadmap phases should not be interpreted as already implemented..
- 
-
-
+**Chapter 4 verification:** 28 dedicated tests across the four focused test suites, the PageManager self-test, and 11 storage stress-test checks passed. The stress test recovered 424 remaining original records after updates and deletions. This describes the tests run for the current implementation; it is not a claim of production-grade reliability.
