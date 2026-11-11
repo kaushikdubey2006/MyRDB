@@ -1,3 +1,4 @@
+
 import struct
 
 from config import PAGE_SIZE, PAGE_MAGIC, FORMAT_VERSION
@@ -76,11 +77,6 @@ class Record:
     def serialize(self):
         """
         Convert record values into bytes.
-
-        Example:
-        [101, "Aman", 20]
-        becomes:
-        b"101|Aman|20"
         """
 
         data = "|".join(
@@ -114,6 +110,8 @@ class Page:
 
     def __init__(self, page_id):
 
+        self.page_id = page_id
+
         self.header = PageHeader(page_id)
 
         # Complete 4096-byte page
@@ -122,13 +120,10 @@ class Page:
         # Store header
         self._write_header()
 
-        # Slot directory is maintained in memory.
-        #
-        # Each entry:
         # slot_id -> (offset, length)
         self.slots = []
 
-        # Tracks deleted/reusable slots
+        # Deleted slot IDs
         self.deleted_slots = set()
 
     # =========================
@@ -159,10 +154,6 @@ class Page:
 
     def _write_slots(self):
 
-        # Clear existing slot directory area
-        start = self._slot_directory_start()
-
-        # Write each slot
         for slot_id, slot in enumerate(self.slots):
 
             offset, length = slot
@@ -180,6 +171,91 @@ class Page:
                 )
             )
 
+    def _read_slots(self):
+        """
+        Reconstruct the slot directory from page bytes.
+
+        Slots are stored backwards from the end of the page.
+        A (0, 0) entry represents unused directory space.
+        """
+
+        self.slots = []
+        self.deleted_slots = set()
+
+        slot_id = 0
+
+        while True:
+
+            position = (
+                PAGE_SIZE
+                - ((slot_id + 1) * SLOT_SIZE)
+            )
+
+            if position < PAGE_HEADER_SIZE:
+                raise ValueError(
+                    "Slot directory exceeds page boundary"
+                )
+
+            slot_data = self.data[
+                position:position + SLOT_SIZE
+            ]
+
+            offset, length = struct.unpack(
+                SLOT_FORMAT,
+                slot_data
+            )
+
+            # No more slots
+            if offset == 0 and length == 0:
+                break
+
+            # Validate slot offset
+            if offset < PAGE_HEADER_SIZE:
+                raise ValueError(
+                    "Invalid record offset in slot directory"
+                )
+
+            if offset >= PAGE_SIZE:
+                raise ValueError(
+                    "Record offset exceeds page boundary"
+                )
+
+            if offset + length > PAGE_SIZE:
+                raise ValueError(
+                    "Record exceeds page boundary"
+                )
+
+            self.slots.append(
+                (offset, length)
+            )
+
+            # Length zero means deleted
+            if length == 0:
+                self.deleted_slots.add(slot_id)
+
+            slot_id += 1
+
+        # Check that records do not overlap the slot directory
+        directory_start = self._slot_directory_start()
+
+        for offset, length in self.slots:
+
+            if length > 0 and offset + length > directory_start:
+                raise ValueError(
+                    "Record overlaps slot directory"
+                )
+
+        active_count = sum(
+            1
+            for offset, length in self.slots
+            if length > 0
+        )
+
+        if active_count != self.header.record_count:
+            raise ValueError(
+                "Record count does not match slot directory"
+            )
+
     # =========================
     # Free Space
     # =========================
@@ -188,11 +264,10 @@ class Page:
 
         record_end = PAGE_HEADER_SIZE
 
-        for slot in self.slots:
-
-            offset, length = slot
+        for offset, length in self.slots:
 
             if length > 0:
+
                 record_end = max(
                     record_end,
                     offset + length
@@ -214,69 +289,28 @@ class Page:
 
     def insert_record(self, record):
 
-        if isinstance(record, Record):
-            record_bytes = record.serialize()
-        else:
+        if not isinstance(record, Record):
             raise TypeError(
                 "insert_record expects a Record object"
             )
 
+        record_bytes = record.serialize()
+
         record_length = len(record_bytes)
 
-        # Check whether a deleted slot can be reused
+        # Find a deleted slot to reuse
         reusable_slot = None
 
         for slot_id in sorted(self.deleted_slots):
 
-            old_offset, old_length = self.slots[slot_id]
+            reusable_slot = slot_id
+            break
 
-            if old_length >= record_length:
+        # Check available space
+        required_space = record_length
 
-                reusable_slot = slot_id
-                break
-
-        # =========================
-        # Reuse Deleted Slot
-        # =========================
-
-        if reusable_slot is not None:
-
-            old_offset, old_length = (
-                self.slots[reusable_slot]
-            )
-
-            self.data[
-                old_offset:
-                old_offset + record_length
-            ] = record_bytes
-
-            self.slots[reusable_slot] = (
-                old_offset,
-                record_length
-            )
-
-            self.deleted_slots.remove(
-                reusable_slot
-            )
-
-            self.header.record_count += 1
-
-            self.header.free_space = (
-                self.calculate_free_space()
-            )
-
-            self._write_slots()
-            self._write_header()
-
-            return reusable_slot
-
-        # =========================
-        # New Slot
-        # =========================
-
-        required_space = (
-            record_length + SLOT_SIZE
-        )
+        if reusable_slot is None:
+            required_space += SLOT_SIZE
 
         if self.calculate_free_space() < required_space:
 
@@ -284,14 +318,13 @@ class Page:
                 "Not enough free space in page"
             )
 
-        # Find record offset
+        # Find the end of active records
         record_offset = PAGE_HEADER_SIZE
 
-        for slot in self.slots:
-
-            offset, length = slot
+        for offset, length in self.slots:
 
             if length > 0:
+
                 record_offset = max(
                     record_offset,
                     offset + length
@@ -303,15 +336,30 @@ class Page:
             record_offset + record_length
         ] = record_bytes
 
-        # Add slot
-        self.slots.append(
-            (
+        # Reuse deleted slot
+        if reusable_slot is not None:
+
+            self.slots[reusable_slot] = (
                 record_offset,
                 record_length
             )
-        )
 
-        slot_id = len(self.slots) - 1
+            self.deleted_slots.remove(
+                reusable_slot
+            )
+
+            slot_id = reusable_slot
+
+        else:
+
+            self.slots.append(
+                (
+                    record_offset,
+                    record_length
+                )
+            )
+
+            slot_id = len(self.slots) - 1
 
         self.header.record_count += 1
 
@@ -334,8 +382,8 @@ class Page:
 
         offset, length = self.slots[slot_id]
 
-        # Deleted slot
         if length == 0:
+
             raise ValueError(
                 "Record has been deleted"
             )
@@ -360,28 +408,24 @@ class Page:
         self._validate_slot_id(slot_id)
 
         if slot_id in self.deleted_slots:
+
             raise ValueError(
                 "Cannot update deleted record"
             )
 
         if not isinstance(record, Record):
+
             raise TypeError(
                 "update_record expects a Record object"
             )
 
         new_bytes = record.serialize()
 
-        old_offset, old_length = (
-            self.slots[slot_id]
-        )
+        old_offset, old_length = self.slots[slot_id]
 
         new_length = len(new_bytes)
 
-        # =========================
-        # Case 1:
-        # New record fits old space
-        # =========================
-
+        # Case 1: New record fits existing space
         if new_length <= old_length:
 
             self.data[
@@ -394,27 +438,19 @@ class Page:
                 new_length
             )
 
-        # =========================
-        # Case 2:
-        # New record is larger
-        # =========================
-
+        # Case 2: New record needs more space
         else:
 
-            # Temporarily free old slot
+            # Temporarily mark old location as free
             self.slots[slot_id] = (
                 old_offset,
                 0
             )
 
-            required_space = (
-                new_length
-                + SLOT_SIZE
-            )
+            # Existing slot is reused, so no new SLOT_SIZE
+            # is required.
+            if self.calculate_free_space() < new_length:
 
-            if self.calculate_free_space() < required_space:
-
-                # Restore original slot
                 self.slots[slot_id] = (
                     old_offset,
                     old_length
@@ -424,20 +460,19 @@ class Page:
                     "Not enough free space for update"
                 )
 
-            # Find new location
+            # Find the end of active records
             new_offset = PAGE_HEADER_SIZE
 
-            for index, slot in enumerate(self.slots):
-
-                offset, length = slot
+            for offset, length in self.slots:
 
                 if length > 0:
+
                     new_offset = max(
                         new_offset,
                         offset + length
                     )
 
-            # Store new record
+            # Write updated record
             self.data[
                 new_offset:
                 new_offset + new_length
@@ -463,19 +498,15 @@ class Page:
 
         self._validate_slot_id(slot_id)
 
-        offset, length = (
-            self.slots[slot_id]
-        )
+        offset, length = self.slots[slot_id]
 
         if length == 0:
+
             raise ValueError(
                 "Record already deleted"
             )
 
-        # Mark slot as deleted.
-        #
-        # We keep the offset but set
-        # length to zero.
+        # Mark slot as deleted
         self.slots[slot_id] = (
             offset,
             0
@@ -517,10 +548,9 @@ class Page:
 
     def write_to_file(self, file):
 
-        offset = (
-            self.header.page_id
-            * PAGE_SIZE
-        )
+        self.validate()
+
+        offset = self.page_id * PAGE_SIZE
 
         file.seek(offset)
 
@@ -533,16 +563,11 @@ class Page:
     @classmethod
     def read_from_file(cls, file, page_id):
 
-        offset = (
-            page_id
-            * PAGE_SIZE
-        )
+        offset = page_id * PAGE_SIZE
 
         file.seek(offset)
 
-        data = file.read(
-            PAGE_SIZE
-        )
+        data = file.read(PAGE_SIZE)
 
         if len(data) != PAGE_SIZE:
 
@@ -555,6 +580,19 @@ class Page:
         page.data = bytearray(data)
 
         page._read_header()
+
+        # Verify the requested page ID
+        if page.header.page_id != page_id:
+
+            raise ValueError(
+                "Page ID mismatch"
+            )
+
+        # Reconstruct in-memory slot information
+        page._read_slots()
+
+        # Validate loaded page
+        page.validate()
 
         return page
 
@@ -570,12 +608,8 @@ class Page:
                 "Invalid page size"
             )
 
-        header_data = (
-            self.data[:PAGE_HEADER_SIZE]
-        )
-
         header = PageHeader.unpack(
-            header_data
+            self.data[:PAGE_HEADER_SIZE]
         )
 
         if header.magic != PAGE_MAGIC:
@@ -590,58 +624,65 @@ class Page:
                 "Unsupported page format version"
             )
 
-        if (
-            header.page_id
-            != self.header.page_id
-        ):
+        if header.page_id != self.page_id:
 
             raise ValueError(
                 "Page ID mismatch"
+            )
+
+        if header.record_count != self.header.record_count:
+
+            raise ValueError(
+                "Record count mismatch"
+            )
+
+        if header.free_space != self.header.free_space:
+
+            raise ValueError(
+                "Free space metadata mismatch"
+            )
+
+        if header.record_count < 0:
+
+            raise ValueError(
+                "Invalid record count"
+            )
+
+        if self.header.free_space != self.calculate_free_space():
+
+            raise ValueError(
+                "Incorrect free space calculation"
             )
 
         return True
 
 
 # =========================
-# Chapter 3 Test
+# Chapter 3 and Persistence Tests
 # =========================
 
 if __name__ == "__main__":
 
-    print("=== MyRDB Chapter 3 Test ===")
+    import tempfile
 
-    # Create page
+    print("=== MyRDB Page Engine Test ===")
+
     page = Page(0)
 
     print("\nInitial Free Space:")
     print(page.calculate_free_space())
 
-    # =========================
     # INSERT
-    # =========================
-
-    record1 = Record(
-        [101, "Aman", 20]
-    )
-
-    record2 = Record(
-        [102, "Ravi", 21]
-    )
-
-    record3 = Record(
-        [103, "Rahul", 22]
-    )
-
     slot1 = page.insert_record(
-        record1
+        Record([101, "Aman", 20])
     )
 
     slot2 = page.insert_record(
-        record2
+        Record([102, "Ravi", 21])
     )
 
     slot3 = page.insert_record(
-        record3
+        Record([103, "Rahul", 22])
     )
 
     print("\nInserted Slots:")
@@ -650,100 +691,100 @@ if __name__ == "__main__":
     print("\nRecord Count:")
     print(page.header.record_count)
 
-    # =========================
     # READ
-    # =========================
-
     print("\nRead Records:")
 
-    print(
-        page.read_record(slot1)
-    )
+    print(page.read_record(slot1))
+    print(page.read_record(slot2))
+    print(page.read_record(slot3))
 
-    print(
-        page.read_record(slot2)
-    )
-
-    print(
-        page.read_record(slot3)
-    )
-
-    # =========================
     # UPDATE
-    # =========================
-
     page.update_record(
         slot2,
-        Record(
-            [102, "Ravi", 25]
-        )
+        Record([102, "Ravi", 25])
     )
 
     print("\nAfter Update:")
+    print(page.read_record(slot2))
 
-    print(
-        page.read_record(slot2)
-    )
-
-    # =========================
     # DELETE
-    # =========================
-
-    page.delete_record(
-        slot1
-    )
+    page.delete_record(slot1)
 
     print("\nAfter Delete:")
-
-    print(
-        "Record Count:",
-        page.header.record_count
-    )
+    print("Record Count:", page.header.record_count)
 
     try:
-
         page.read_record(slot1)
 
     except ValueError as error:
+        print("Read deleted record:", error)
 
-        print(
-            "Read deleted record:",
-            error
-        )
-
-    # =========================
     # SLOT REUSE
-    # =========================
-
     new_slot = page.insert_record(
-        Record(
-            [104, "Neha", 23]
-        )
+        Record([104, "Neha", 23])
     )
 
-    print("\nNew Record Slot:")
+    print("\nReused Slot:")
     print(new_slot)
 
     print("\nNew Record:")
+    print(page.read_record(new_slot))
 
-    print(
-        page.read_record(new_slot)
-    )
-
-    # =========================
     # VALIDATION
-    # =========================
-
     print("\nPage Validation:")
-
-    print(
-        page.validate()
-    )
+    print(page.validate())
 
     print("\nFinal Free Space:")
+    print(page.calculate_free_space())
 
-    print(
-        page.calculate_free_space()
-    )
+    # =========================
+    # PERSISTENCE TEST
+    # =========================
 
-    print("\n=== Chapter 3 Test Complete ===")
+    print("\n=== Persistence Test ===")
+
+    with tempfile.TemporaryFile(mode="w+b") as file:
+
+        # Save page
+        page.write_to_file(file)
+        file.flush()
+
+        print("\nPage written to file.")
+
+        # Reload page from file
+        loaded_page = Page.read_from_file(
+            file,
+            0
+        )
+
+        print("Page loaded successfully.")
+
+        print("\nRestored Slots:")
+        print(loaded_page.slots)
+
+        print("\nRestored Deleted Slots:")
+        print(loaded_page.deleted_slots)
+
+        print("\nRestored Records:")
+
+        for index in range(len(loaded_page.slots)):
+
+            if index not in loaded_page.deleted_slots:
+
+                print(
+                    index,
+                    loaded_page.read_record(index)
+                )
+
+        print("\nLoaded Page Validation:")
+        print(loaded_page.validate())
+
+        # Test operations after reload
+        loaded_page.insert_record(
+            Record([105, "Karan", 24])
+        )
+
+        print("\nRecord Inserted After Reload:")
+        print(loaded_page.read_record(3))
+
+    print("\n=== All Tests Completed ===")
