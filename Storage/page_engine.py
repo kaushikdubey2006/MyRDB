@@ -525,6 +525,94 @@ class Page:
         self._write_slots()
         self._write_header()
 
+
+
+
+
+
+    # =========================
+    # Record Compaction
+    # =========================
+
+    def compact(self):
+        """
+        Reorganize active records into contiguous storage.
+
+        Existing slot IDs are preserved so that record
+        locations (page_id, slot_id) remain unchanged.
+        """
+
+        self.validate()
+
+        free_space_before = self.calculate_free_space()
+
+        # Preserve all active record bytes before rebuilding.
+        active_records = {}
+
+        for slot_id, (offset, length) in enumerate(self.slots):
+
+            if length > 0:
+
+                active_records[slot_id] = bytes(
+                    self.data[offset:offset + length]
+                )
+
+        # Create a fresh page buffer.
+        new_data = bytearray(PAGE_SIZE)
+
+        new_slots = []
+        current_offset = PAGE_HEADER_SIZE
+
+        # Repack active records while preserving slot IDs.
+        for slot_id, (old_offset, old_length) in enumerate(self.slots):
+
+            if old_length == 0:
+
+                # Preserve deleted slot for future reuse.
+                new_slots.append(
+                    (PAGE_HEADER_SIZE, 0)
+                )
+
+                continue
+
+            record_bytes = active_records[slot_id]
+            record_length = len(record_bytes)
+
+            new_data[
+                current_offset:current_offset + record_length
+            ] = record_bytes
+
+            new_slots.append(
+                (current_offset, record_length)
+            )
+
+            current_offset += record_length
+
+        # Replace old page data and slot directory.
+        self.data = new_data
+        self.slots = new_slots
+
+        # Reconstruct deleted slot information.
+        self.deleted_slots = {
+            slot_id
+            for slot_id, (_, length) in enumerate(self.slots)
+            if length == 0
+        }
+
+        # Update metadata.
+        self.header.free_space = self.calculate_free_space()
+
+        self._write_slots()
+        self._write_header()
+
+        self.validate()
+
+        # Return the additional contiguous free space.
+        return (
+            self.header.free_space - free_space_before
+        )
+
+
     # =========================
     # Slot Validation
     # =========================
